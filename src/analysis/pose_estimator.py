@@ -10,10 +10,10 @@ from dto.frame_data import FrameData, Landmark
 
 # class responsible for estimating pose data from videos
 class PoseEstimator:
-    def __init__(self, model_path: Path, cache_dir: Path = Path(".cache"), cache_outputs: bool = False):
+    def __init__(self, model_path: Path, cache_dir: Path = Path(".cache"), cache_data: bool = False):
         self.model_path = model_path
         self.cache_dir = cache_dir
-        self.cache_outputs = cache_outputs
+        self.cache_data = cache_data
 
     def _cache_key(self, video_path: Path) -> str:
         stat = video_path.stat()
@@ -26,10 +26,9 @@ class PoseEstimator:
         """
 
         # cache handling
-        if self.cache_outputs:
-            cache_path = self.cache_dir / f"{self._cache_key(video_path)}.pkl"
-            if cache_path.exists():
-                return pickle.loads(cache_path.read_bytes())
+        cache_path = self.cache_dir / f"{self._cache_key(video_path)}.pkl"
+        if cache_path.exists():
+            return pickle.loads(cache_path.read_bytes())
             
         # get video capture
         capture = cv2.VideoCapture(str(video_path))
@@ -77,7 +76,7 @@ class PoseEstimator:
             capture.release()
 
         # if caching enabled, save the output to cache
-        if self.cache_outputs:
+        if self.cache_data:
             cache_path.parent.mkdir(exist_ok=True)
             cache_path.write_bytes(pickle.dumps(frame_data_list))
 

@@ -14,8 +14,8 @@ class BiggerBrother:
         self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
         self.model_path = Path(args.model_path) if args.model_path else ensure_model()
-        self.cache_outputs = args.cache_outputs if args.cache_outputs else False
-        self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_outputs=self.cache_outputs)
+        self.cache_data = args.cache_data if args.cache_data else False
+        self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data)
 
     # analyses a given video and returns a RepAnalysisResult with rep metrics
     def analyse_form(
@@ -51,7 +51,7 @@ class BiggerBrother:
         print(self.calibration_path)
         print(self.model_path)
         print(self.cache_dir)
-        print(self.cache_outputs)
+        print(self.cache_data)
         if self.input_path:
             result = self.pose_estimator.process_video(self.input_path)
 
@@ -88,7 +88,7 @@ def main():
     )
 
     parser.add_argument(
-        "--cache_outputs", 
+        "--cache_data", 
         action="store_true"
     )
 
