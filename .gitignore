@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Repo Specific
+.DS_Store
+*.mov
+*.mp4
+*.MOV
+*.MP4
+*.avi
+*.AVI
+*.csv
