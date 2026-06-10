@@ -1,6 +1,7 @@
 import argparse
 
-from src.dto.results import RepAnalysisResult, RepMetrics, RirAnalysisResult
+from dto.results import RepAnalysisResult, RirAnalysisResult
+from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
 from model import ensure_model
 
@@ -13,8 +14,8 @@ class BiggerBrother:
         self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
         self.model_path = Path(args.model_path) if args.model_path else ensure_model()
-        self.pose_estimator = PoseEs
         self.cache_outputs = args.cache_outputs if args.cache_outputs else False
+        self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_outputs=self.cache_outputs)
 
     # analyses a given video and returns a RepAnalysisResult with rep metrics
     def analyse_form(
@@ -51,6 +52,8 @@ class BiggerBrother:
         print(self.model_path)
         print(self.cache_dir)
         print(self.cache_outputs)
+        if self.input_path:
+            result = self.pose_estimator.process_video(self.input_path)
 
 def main():
     parser = argparse.ArgumentParser(
