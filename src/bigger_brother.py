@@ -4,6 +4,7 @@ from dto.results import RepAnalysisResult, RirAnalysisResult
 from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
 from model import ensure_model
+from analysis.metrics import compute_metrics
 
 CACHE_DIR = Path("./cache")
 
@@ -52,8 +53,14 @@ class BiggerBrother:
         print(self.model_path)
         print(self.cache_dir)
         print(self.cache_data)
+
+        # if self.calibration_path:
+        #   calibration_result = self.pose_estimator.process_video(self.calibration_path)
+        #   velocity_estimate = self.calculate_velocity(calibration_result)
+
         if self.input_path:
             result = self.pose_estimator.process_video(self.input_path)
+            metrics = compute_metrics(result)
 
 def main():
     parser = argparse.ArgumentParser(

@@ -2,19 +2,25 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-@dataclass
-class RepMetrics:
-    """Per-rep features extracted from a single rep."""
+@dataclass(frozen=True)
+class RepBoundaries:
+    """Structural info known as soon as a rep is detected."""
     rep_number: int
-    rom_degrees: float
-    eccentric_speed_ms: float
-    concentric_speed_ms: float
-    peak_concentric_speed_ms: float
-    rep_duration_s: float
     eccentric_start_frame: int
     eccentric_end_frame: int
     concentric_start_frame: int
     concentric_end_frame: int
+    rep_duration_s: float
+
+
+@dataclass(frozen=True)
+class RepMetrics:
+    """Derived metrics, computed from RepBoundaries + frame data."""
+    boundaries: RepBoundaries
+    rom_degrees: float
+    eccentric_speed_ms: float
+    concentric_speed_ms: float
+    peak_concentric_speed_ms: float
     
 @dataclass
 class RepAnalysisResult:

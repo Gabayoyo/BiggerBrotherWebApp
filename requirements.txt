@@ -3,3 +3,4 @@ numpy
 mediapipe
 ipywidgets
 pandas
+scipy
