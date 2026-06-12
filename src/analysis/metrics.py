@@ -11,5 +11,4 @@ def compute_metrics(frame_data: list[FrameData]) -> RepMetrics:
     """
     # count reps -> rep boundaries
     # find ROM, angular velocity and mean velocity -> rep metrics
-    print(frame_data)
     pass

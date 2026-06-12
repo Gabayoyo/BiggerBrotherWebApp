@@ -1,0 +1,59 @@
+# MediaPipe landmark indices (0-32)
+LANDMARK_INDICES = {
+    # Face
+    'NOSE': 0,
+    'LEFT_EYE_INNER': 1,
+    'LEFT_EYE': 2,
+    'LEFT_EYE_OUTER': 3,
+    'RIGHT_EYE_INNER': 4,
+    'RIGHT_EYE': 5,
+    'RIGHT_EYE_OUTER': 6,
+    'LEFT_EAR': 7,
+    'RIGHT_EAR': 8,
+    'LEFT_MOUTH': 9,
+    'RIGHT_MOUTH': 10,
+    
+    # Torso
+    'LEFT_SHOULDER': 11,
+    'RIGHT_SHOULDER': 12,
+    'LEFT_ELBOW': 13,
+    'RIGHT_ELBOW': 14,
+    'LEFT_WRIST': 15,
+    'RIGHT_WRIST': 16,
+    'LEFT_PINKY': 17,
+    'RIGHT_PINKY': 18,
+    'LEFT_INDEX': 19,
+    'RIGHT_INDEX': 20,
+    'LEFT_THUMB': 21,
+    'RIGHT_THUMB': 22,
+    'LEFT_HIP': 23,
+    'RIGHT_HIP': 24,
+    
+    # Legs
+    'LEFT_KNEE': 25,
+    'RIGHT_KNEE': 26,
+    'LEFT_ANKLE': 27,
+    'RIGHT_ANKLE': 28,
+    'LEFT_HEEL': 29,
+    'RIGHT_HEEL': 30,
+    'LEFT_FOOT_INDEX': 31,
+    'RIGHT_FOOT_INDEX': 32,
+}
+
+# Common subsets for easier access
+UPPER_BODY = ['LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_ELBOW', 'RIGHT_ELBOW', 
+              'LEFT_WRIST', 'RIGHT_WRIST']
+
+LOWER_BODY = ['LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE', 
+              'LEFT_ANKLE', 'RIGHT_ANKLE']
+
+SPINE = ['LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_HIP', 'RIGHT_HIP']
+
+ANGLES = {
+    "ELBOW_LEFT": ('LEFT_SHOULDER', 'LEFT_ELBOW', 'LEFT_WRIST'),
+    "ELBOW_RIGHT": ('RIGHT_SHOULDER', 'RIGHT_ELBOW', 'RIGHT_WRIST'),
+    "SHOULDER_LEFT": ('LEFT_HIP', 'LEFT_SHOULDER', 'LEFT_ELBOW'),
+    "SHOULDER_RIGHT": ('RIGHT_HIP', 'RIGHT_SHOULDER', 'RIGHT_ELBOW'),
+    "HIP_LEFT": ('LEFT_SHOULDER', 'LEFT_HIP', 'LEFT_KNEE'),
+    "HIP_RIGHT": ('RIGHT_SHOULDER', 'RIGHT_HIP', 'RIGHT_KNEE'),
+}

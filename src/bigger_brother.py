@@ -13,6 +13,7 @@ class BiggerBrother:
     def __init__(self, args: argparse.Namespace):
         self.input_path = Path(args.input_path) if args.input_path else None
         self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
+        self.exercise = args.exercise
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
         self.model_path = Path(args.model_path) if args.model_path else ensure_model()
         self.cache_data = args.cache_data if args.cache_data else False
@@ -50,6 +51,7 @@ class BiggerBrother:
     def run(self):
         print(self.input_path)
         print(self.calibration_path)
+        print(self.exercise)
         print(self.model_path)
         print(self.cache_dir)
         print(self.cache_data)
@@ -71,6 +73,12 @@ def main():
         "input_path",
         type=str,
         help="Path to input video"
+    )
+
+    parser.add_argument(
+        "exercise",
+        type=str,
+        help="Type of exercise being performed in the video (e.g. 'bicep curl', 'squat', etc.)"
     )
 
     parser.add_argument(
