@@ -12,10 +12,11 @@ class BiggerBrother:
 
     def __init__(self, args: argparse.Namespace):
         self.input_path = Path(args.input_path) if args.input_path else None
-        self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
+        self. weight = args.weight
         self.exercise = args.exercise
+        self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
-        self.model_path = Path(args.model_path) if args.model_path else ensure_model()
+        self.model_path = ensure_model()
         self.cache_data = args.cache_data if args.cache_data else False
         self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data)
 
@@ -50,8 +51,9 @@ class BiggerBrother:
 
     def run(self):
         print(self.input_path)
-        print(self.calibration_path)
         print(self.exercise)
+        print(self.weight)
+        print(self.calibration_path)
         print(self.model_path)
         print(self.cache_dir)
         print(self.cache_data)
@@ -82,17 +84,16 @@ def main():
     )
 
     parser.add_argument(
+        "weight",
+        type=float,
+        help="Weight used in the exercise (in kg)"
+    )
+
+    parser.add_argument(
         "--calibration_path",
         type=str,
         default=None,
         help="Path to calibration video"
-    )
-
-    parser.add_argument(
-        "--model-path",
-        type=str,
-        default=None,
-        help="Path to pose landmarker model. If not provided, will use default and download if necessary."
     )
 
     parser.add_argument(

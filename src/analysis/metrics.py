@@ -15,9 +15,9 @@ def compute_metrics(frame_data: list[FrameData]) -> RepMetrics:
     """
     Compute metrics from the pose estimation output.
     """
-    # count reps -> rep boundaries
     # find ROM, angular velocity and mean velocity -> rep metrics
     angles = derive_angles(frame_data)
     smoothed_angles = smooth_floats(np.array(angles))
+    # count reps, return rep boundaries
     smoothed_landmarks = smooth_landmark_trajectory(frame_data, landmark_index=LANDMARK_INDICES['LEFT_WRIST'])
     pass
