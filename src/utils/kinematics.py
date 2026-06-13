@@ -26,9 +26,9 @@ def derive_angles(frame_data: list[FrameData]) -> list[float]:
     angles = []
 
     for frame in frame_data:
-        shoulder = frame.get_landmark_by_name("LEFT_SHOULDER")
-        elbow = frame.get_landmark_by_name("LEFT_ELBOW")
-        wrist = frame.get_landmark_by_name("LEFT_WRIST")
+        shoulder = frame.get_world_landmark_by_name("LEFT_SHOULDER")
+        elbow = frame.get_world_landmark_by_name("LEFT_ELBOW")
+        wrist = frame.get_world_landmark_by_name("LEFT_WRIST")
         if (shoulder.visible and elbow.visible and wrist.visible):
             angle = _calculate_angle(shoulder, elbow, wrist)
             angles.append(angle)

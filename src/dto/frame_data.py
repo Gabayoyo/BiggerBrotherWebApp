@@ -52,6 +52,14 @@ class FrameData:
         """Get landmark by readable name"""
         return self.landmarks[LANDMARK_INDICES[name]]
     
+    def get_world_landmark(self, index: int) -> Landmark:
+        """Get world landmark by MediaPipe index (0-32)"""
+        return self.world_landmarks[index]
+    
+    def get_world_landmark_by_name(self, name: str) -> Landmark:
+        """Get world landmark by readable name"""
+        return self.world_landmarks[LANDMARK_INDICES[name]]
+    
     def get_keypoints_array(self) -> np.ndarray:
         """Get all landmarks as numpy array (33, 3)"""
         return np.array([lm.to_array() for lm in self.landmarks])
@@ -61,7 +69,7 @@ class FrameData:
         return [(i, lm) for i, lm in enumerate(self.landmarks) if lm.visibility > 0.5]
     
     @classmethod
-    def from_mediapipe(cls, frame_num: int, timestamp: float, pose_landmarks):
+    def from_mediapipe(cls, frame_num: int, timestamp: float, pose_landmarks, world_landmarks):
         """Create FrameData from MediaPipe pose_landmarks object"""
         landmarks = [
             Landmark.from_mediapipe(lm) 
@@ -70,5 +78,6 @@ class FrameData:
         return cls(
             frame_number=frame_num,
             timestamp=timestamp,
-            landmarks=landmarks
+            landmarks=landmarks,
+            world_landmarks=world_landmarks
         )

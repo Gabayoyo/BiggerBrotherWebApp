@@ -18,6 +18,7 @@ class BiggerBrother:
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
         self.model_path = ensure_model()
         self.cache_data = args.cache_data if args.cache_data else False
+        self.visualise = args.visualise if args.visualise else False
         self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data)
 
     # analyses a given video and returns a RepAnalysisResult with rep metrics
@@ -57,6 +58,7 @@ class BiggerBrother:
         print(self.model_path)
         print(self.cache_dir)
         print(self.cache_data)
+        print(self.visualise)
 
         # if self.calibration_path:
         #   calibration_result = self.pose_estimator.process_video(self.calibration_path)
@@ -64,7 +66,7 @@ class BiggerBrother:
 
         if self.input_path:
             result = self.pose_estimator.process_video(self.input_path)
-            metrics = compute_metrics(result)
+            metrics = compute_metrics(result, visualise=self.visualise)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -106,6 +108,12 @@ def main():
     parser.add_argument(
         "--cache-data", 
         action="store_true"
+    )
+
+    parser.add_argument(
+        "--visualise",
+        action="store_true",
+        help="Visualise the pose estimation results"
     )
 
     args = parser.parse_args()
