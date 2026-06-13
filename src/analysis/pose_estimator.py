@@ -44,8 +44,8 @@ class PoseEstimator:
             running_mode=mp_vision.RunningMode.VIDEO,
             num_poses=1,
             min_pose_detection_confidence=0.5,
-            min_pose_presence_confidence=0.5,
-            min_tracking_confidence=0.5,
+            min_pose_presence_confidence=0.7,
+            min_tracking_confidence=0.7,
             output_segmentation_masks=False,
         )
 
@@ -69,6 +69,7 @@ class PoseEstimator:
                             frame_number=frame_idx,
                             timestamp_s=timestamp_ms / 1000,
                             landmarks=[Landmark.from_mediapipe(lm) for lm in result.pose_landmarks[0]],
+                            world_landmarks=[Landmark.from_mediapipe(lm) for lm in result.pose_world_landmarks[0]]
                         ))
 
                     frame_idx += 1

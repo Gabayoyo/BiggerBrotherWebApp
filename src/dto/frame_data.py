@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from landmark_dict import LANDMARK_INDICES
+from dto.landmark_dict import LANDMARK_INDICES
 import numpy as np
 
 @dataclass
@@ -9,8 +9,12 @@ class Landmark:
     y: float      # Normalized y coordinate (0-1)
     z: float      # Depth (relative to torso center)
     visibility: float  # 0-1, how likely it's visible
-    visible: bool = True # True if visibility > 0.7
     presence: float    # 0-1, if landmark is present in frame
+
+    @property
+    def visible(self) -> bool:
+        """Whether landmark is confidently visible."""
+        return self.visibility > 0.7
     
     def to_array(self) -> np.ndarray:
         return np.array([self.x, self.y, self.z])
@@ -23,7 +27,6 @@ class Landmark:
             y=landmark.y,
             z=landmark.z,
             visibility=landmark.visibility,
-            visible=landmark.visibility > 0.7,
             presence=landmark.presence
         )
 
@@ -33,7 +36,8 @@ class FrameData:
     """Pose data for a single video frame"""
     frame_number: int
     timestamp_s: float  # Seconds from start
-    landmarks: list[Landmark]  # Length 33
+    landmarks: list[Landmark]  # 2D landmarks (normalized)
+    world_landmarks: list[Landmark] # 3D landmarks (meters, relative to world origin)
     
     def __post_init__(self):
         """Validate landmarks count"""
