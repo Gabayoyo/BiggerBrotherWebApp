@@ -12,7 +12,7 @@ class BiggerBrother:
 
     def __init__(self, args: argparse.Namespace):
         self.input_path = Path(args.input_path) if args.input_path else None
-        self. weight = args.weight
+        self.weight = args.weight
         self.exercise = args.exercise
         self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
@@ -90,7 +90,7 @@ def main():
     )
 
     parser.add_argument(
-        "--calibration_path",
+        "--calibration-path",
         type=str,
         default=None,
         help="Path to calibration video"
@@ -104,7 +104,7 @@ def main():
     )
 
     parser.add_argument(
-        "--cache_data", 
+        "--cache-data", 
         action="store_true"
     )
 
