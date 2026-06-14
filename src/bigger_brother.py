@@ -5,6 +5,7 @@ from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
 from model import ensure_model
 from analysis.metrics import compute_metrics
+from utils.utils import sanitise_exercise_input, sanitise_unilateral_input
 
 CACHE_DIR = Path("./cache")
 
@@ -13,7 +14,8 @@ class BiggerBrother:
     def __init__(self, args: argparse.Namespace):
         self.input_path = Path(args.input_path) if args.input_path else None
         self.weight = args.weight
-        self.exercise = args.exercise
+        self.exercise = sanitise_exercise_input(args.exercise)
+        self.unilateral = sanitise_unilateral_input(args.unilateral)
         self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
         self.model_path = ensure_model()
@@ -54,6 +56,7 @@ class BiggerBrother:
         print(self.input_path)
         print(self.exercise)
         print(self.weight)
+        print(self.unilateral)
         print(self.calibration_path)
         print(self.model_path)
         print(self.cache_dir)
@@ -66,7 +69,7 @@ class BiggerBrother:
 
         if self.input_path:
             result = self.pose_estimator.process_video(self.input_path)
-            metrics = compute_metrics(result, visualise=self.visualise)
+            metrics = compute_metrics(result, visualise=self.visualise, exercise=self.exercise, unilateral=self.unilateral)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -89,6 +92,13 @@ def main():
         "weight",
         type=float,
         help="Weight used in the exercise (in kg)"
+    )
+
+    parser.add_argument(
+        "--unilateral",
+        type=str,
+        default="bilateral",
+        help="Specify if the exercise is unilateral (e.g. 'left' or 'right')"
     )
 
     parser.add_argument(

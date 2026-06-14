@@ -6,22 +6,27 @@ from dto.results import RepMetrics
 from analysis.visualiser import animate_skeleton
 from utils.kinematics import derive_angles
 from utils.utils import smooth_floats, smooth_landmark_trajectory
-from dto.landmark_dict import LANDMARK_INDICES
+from landmark_dicts import LANDMARK_INDICES
+from exercises import get_exercise
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_metrics(frame_data: list[FrameData], visualise: bool) -> RepMetrics:
+def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str, unilateral: str) -> RepMetrics:
     """
     Compute metrics from the pose estimation output.
     """
+    # get more visible side
+    exercise_info = get_exercise(exercise, unilateral)
+
     # find ROM, angular velocity and mean velocity -> rep metrics
     angles = derive_angles(frame_data)
     # angle is smoothed afterwards; is better
     smoothed_angles = smooth_floats(np.array(angles))
 
-    frames = range(len(smoothed_angles)) # frame indices
+    if visualise:
+        anim = animate_skeleton(frame_data)
 
     # count reps, return rep boundaries
 

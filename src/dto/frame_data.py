@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from dto.landmark_dict import LANDMARK_INDICES
+from landmark_dicts import LANDMARK_INDICES
 import numpy as np
 
 @dataclass

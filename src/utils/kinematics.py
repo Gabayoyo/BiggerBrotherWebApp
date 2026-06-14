@@ -21,6 +21,7 @@ def _calculate_velocity(prev: Landmark, curr: Landmark, dt: float) -> np.ndarray
     displacement = curr.to_array() - prev.to_array()
     return displacement / dt
 
+# TODO: average between left and right sides for bilateral exercises if visibility good for both
 def derive_angles(frame_data: list[FrameData]) -> list[float]:
 
     angles = []

@@ -79,7 +79,7 @@ def animate_skeleton(frame_data_list, save_path=None, fps=30):
         ax.set_xlim(-x_max, -x_min)
         ax.set_ylim(z_min, z_max)   # swap y/z for more natural "depth" view
         ax.set_zlim(-y_max, -y_min) # invert y since image coords go down
-        ax.view_init(elev=0, azim=-90)
+        ax.view_init(elev=0, azim=-75)
         ax.set_xlabel('X')
         ax.set_ylabel('Z')
         ax.set_zlabel('Y')
@@ -93,13 +93,31 @@ def animate_skeleton(frame_data_list, save_path=None, fps=30):
         points = all_points[frame_idx]
         xs, ys, zs = points[:, 0], points[:, 1], points[:, 2]
 
-        # Remap for plotting: (x, z, -y)
-        scatter._offsets3d = (xs, zs, -ys)
+        # --- Hide landmarks that are missing (all zeros or NaN) ---
+        valid = np.isfinite(xs) & np.isfinite(ys) & np.isfinite(zs)
+        is_zero = (xs == 0) & (ys == 0) & (zs == 0)
+        valid = valid & ~is_zero          # True → draw the point
 
+        # Build masked coordinates for the scatter plot.
+        # Using NaN makes matplotlib skip the point entirely.
+        xs_plot = np.where(valid, xs, np.nan)
+        ys_plot = np.where(valid, ys, np.nan)
+        zs_plot = np.where(valid, zs, np.nan)
+
+        # Apply the same remapping you already use: (x, z, -y)
+        scatter._offsets3d = (xs_plot, zs_plot, -ys_plot)
+
+        # --- Hide lines whose endpoints are missing ---
         for line, (i, j) in zip(lines, POSE_CONNECTIONS):
-            line.set_data([xs[i], xs[j]], [zs[i], zs[j]])
-            line.set_3d_properties([-ys[i], -ys[j]])
+            if valid[i] and valid[j]:
+                line.set_data([xs[i], xs[j]], [zs[i], zs[j]])
+                line.set_3d_properties([-ys[i], -ys[j]])
+            else:
+                # Empty data = invisible line
+                line.set_data([], [])
+                line.set_3d_properties([])
 
+        # --- Title stays the same ---
         fd = frame_data_list[frame_idx]
         title.set_text(f"Frame {fd.frame_number} | t={fd.timestamp_s:.2f}s")
         return [scatter, *lines, title]

@@ -40,16 +40,7 @@ LANDMARK_INDICES = {
     'RIGHT_FOOT_INDEX': 32,
 }
 
-# Common subsets for easier access
-UPPER_BODY = ['LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_ELBOW', 'RIGHT_ELBOW', 
-              'LEFT_WRIST', 'RIGHT_WRIST']
-
-LOWER_BODY = ['LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE', 
-              'LEFT_ANKLE', 'RIGHT_ANKLE']
-
-SPINE = ['LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_HIP', 'RIGHT_HIP']
-
-ANGLES = {
+ANGLE = {
     "ELBOW_LEFT": ('LEFT_SHOULDER', 'LEFT_ELBOW', 'LEFT_WRIST'),
     "ELBOW_RIGHT": ('RIGHT_SHOULDER', 'RIGHT_ELBOW', 'RIGHT_WRIST'),
     "SHOULDER_LEFT": ('LEFT_HIP', 'LEFT_SHOULDER', 'LEFT_ELBOW'),
@@ -57,3 +48,24 @@ ANGLES = {
     "HIP_LEFT": ('LEFT_SHOULDER', 'LEFT_HIP', 'LEFT_KNEE'),
     "HIP_RIGHT": ('RIGHT_SHOULDER', 'RIGHT_HIP', 'RIGHT_KNEE'),
 }
+
+ANGLES_OF_INTEREST = {
+    "tricep_extension": ["ELBOW_LEFT", "ELBOW_RIGHT"],
+    "bicep_curl": ["ELBOW_LEFT", "ELBOW_RIGHT"],
+}
+
+def get_landmark_indices_from_angle(angle_name: str) -> tuple[int, int, int]:
+    """Given an angle name (e.g., 'ELBOW_LEFT'), return the corresponding landmark indices."""
+    if angle_name not in ANGLE:
+        raise ValueError(f"Angle '{angle_name}' not defined in ANGLE dictionary.")
+    
+    landmark_names = ANGLE[angle_name]
+    return tuple(LANDMARK_INDICES[name] for name in landmark_names)
+
+def get_landmark_indices_from_exercise(exercise_name: str) -> list[tuple[int, int, int]]:
+    """Given an exercise name (e.g., 'tricep_extension'), return the corresponding landmark indices for all angles of interest."""
+    if exercise_name not in ANGLES_OF_INTEREST:
+        raise ValueError(f"Exercise '{exercise_name}' not defined in ANGLES_OF_INTEREST dictionary.")
+    
+    angle_names = ANGLES_OF_INTEREST[exercise_name]
+    return [get_landmark_indices_from_angle(angle_name) for angle_name in angle_names]
