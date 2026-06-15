@@ -20,7 +20,7 @@ _EXERCISE_CONFIGS = {
     },
 }
 
-def get_exercise(name: str, bilateral: str) -> exercise:
+def get_exercise(name: str, bilateral: str, frame_data: list[FrameData]) -> exercise:
     name = name.strip().lower()
 
     if name not in _EXERCISE_CONFIGS:
@@ -43,4 +43,5 @@ def get_exercise(name: str, bilateral: str) -> exercise:
         limbs=limbs,
         bilateral=bilateral,
         is_flexion=config["is_flexion"],
+        frame_data=frame_data
     )

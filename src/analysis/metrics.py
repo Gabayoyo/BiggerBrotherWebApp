@@ -18,10 +18,13 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
     Compute metrics from the pose estimation output.
     """
     # get more visible side
-    exercise_info = get_exercise(exercise, unilateral)
+    exercise_info = get_exercise(exercise, unilateral, frame_data)
 
     # find ROM, angular velocity and mean velocity -> rep metrics
-    angles = derive_angles(frame_data)
+    angles = derive_angles(exercise_info)
+
+    for angle in angles:
+        print(angle)
     # angle is smoothed afterwards; is better
     smoothed_angles = smooth_floats(np.array(angles))
 

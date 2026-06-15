@@ -1,4 +1,5 @@
-from dto.frame_data import FrameData, Landmark
+from dto.frame_data import Landmark
+from exercises import exercise
 import numpy as np
 
 def _calculate_angle(a: Landmark, b: Landmark, c: Landmark) -> float:
@@ -21,20 +22,45 @@ def _calculate_velocity(prev: Landmark, curr: Landmark, dt: float) -> np.ndarray
     displacement = curr.to_array() - prev.to_array()
     return displacement / dt
 
-# TODO: average between left and right sides for bilateral exercises if visibility good for both
-def derive_angles(frame_data: list[FrameData]) -> list[float]:
+def derive_angles(exercise: exercise) -> list[float]:
 
     angles = []
 
-    for frame in frame_data:
-        shoulder = frame.get_world_landmark_by_name("LEFT_SHOULDER")
-        elbow = frame.get_world_landmark_by_name("LEFT_ELBOW")
-        wrist = frame.get_world_landmark_by_name("LEFT_WRIST")
-        if (shoulder.visible and elbow.visible and wrist.visible):
-            angle = _calculate_angle(shoulder, elbow, wrist)
+    for frame in exercise.frame_data:
+
+        # get one joint you know is visible
+
+        joint1 = frame.get_world_landmark(exercise.limbs[0][0])
+        joint2 = frame.get_world_landmark(exercise.limbs[0][1])
+        joint3 = frame.get_world_landmark(exercise.limbs[0][2])
+
+        if exercise.bilateral == "bilateral":
+            # For bilateral exercises, we can choose one side (e.g., left) for angle calculation
+            joint4 = frame.get_world_landmark(exercise.limbs[1][0])
+            joint5 = frame.get_world_landmark(exercise.limbs[1][1])
+            joint6 = frame.get_world_landmark(exercise.limbs[1][2])
+
+            conf_left = min(joint1.visibility, joint2.visibility, joint3.visibility)
+            conf_right = min(joint4.visibility, joint5.visibility, joint6.visibility)
+            angle_left = _calculate_angle(joint1, joint2, joint3)
+            angle_right = _calculate_angle(joint4, joint5, joint6)
+
+            if conf_left > 0.7 and conf_right > 0.7:
+                weighted_angle = (angle_left * conf_left + angle_right * conf_right) / (conf_left + conf_right)
+                angles.append(weighted_angle)
+            elif conf_left > 0.7:
+                angles.append(angle_left)
+            elif conf_right > 0.7:
+                angles.append(angle_right)
+            else:
+                angles.append(np.nan)  # Append NaN if neither side is sufficiently visible
+
+        elif (joint1.visible and joint2.visible and joint3.visible):
+            # else if unilateral, we can use the specified side's landmarks and check visibility
+            angle = _calculate_angle(joint1, joint2, joint3)
             angles.append(angle)
         else:
-            angles.append(np.nan)  # Append NaN if any landmark is not above visibility threshold
+            angles.append(np.nan)  # Append NaN if any of the two angles is not above visibility threshold
     return angles
 
 def derive_velocity(
