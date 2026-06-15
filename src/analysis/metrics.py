@@ -4,27 +4,25 @@
 from dto.frame_data import FrameData
 from dto.results import RepMetrics
 from analysis.visualiser import animate_skeleton
+from analysis.rep_detection import detect_reps
 from utils.kinematics import derive_angles
-from utils.utils import smooth_floats, smooth_landmark_trajectory
-from landmark_dicts import LANDMARK_INDICES
-from exercises import get_exercise
+from utils.utils import smooth_floats
+from exercise import get_exercise
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str, unilateral: str) -> RepMetrics:
+def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str, laterality: str, fps: float) -> RepMetrics:
     """
     Compute metrics from the pose estimation output.
     """
     # get more visible side
-    exercise_info = get_exercise(exercise, unilateral, frame_data)
+    exercise_info = get_exercise(exercise, laterality, frame_data)
 
     # find ROM, angular velocity and mean velocity -> rep metrics
     angles = derive_angles(exercise_info)
 
-    for angle in angles:
-        print(angle)
     # angle is smoothed afterwards; is better
     smoothed_angles = smooth_floats(np.array(angles))
 
@@ -33,6 +31,7 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
 
     # count reps, return rep boundaries
 
+    return detect_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
+
     # landmarks are smoothed before velocity calculation to reduce noise
-    smoothed_landmarks = smooth_landmark_trajectory(frame_data, landmark_index=LANDMARK_INDICES['LEFT_WRIST'])
-    pass
+    # smoothed_landmarks = smooth_landmark_trajectory(frame_data, landmark_index=LANDMARK_INDICES['LEFT_WRIST'])

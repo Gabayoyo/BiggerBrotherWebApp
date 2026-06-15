@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -12,14 +12,11 @@ class RepBoundaries:
     concentric_end_frame: int
     rep_duration_s: float
 
-
 @dataclass(frozen=True)
 class RepMetrics:
     """Derived metrics, computed from RepBoundaries + frame data."""
     boundaries: RepBoundaries
     rom_degrees: float
-    eccentric_speed_ms: float
-    concentric_speed_ms: float
     peak_concentric_speed_ms: float
     
 @dataclass
@@ -36,12 +33,10 @@ class RepAnalysisResult:
         rows = [header, "-" * len(header)]
         for m in self.metrics:
             rows.append(
-                f"{m.rep_number:>4} "
+                f"{m.boundaries.rep_number:>4} "
                 f"{m.rom_degrees:>8.1f} "
-                f"{m.eccentric_speed_ms:>8.2f} "
-                f"{m.concentric_speed_ms:>8.2f} "
                 f"{m.peak_concentric_speed_ms:>8.2f} "
-                f"{m.rep_duration_s:>7.2f}"
+                f"{m.boundaries.rep_duration_s:>7.2f}"
             )
         return "\n".join(rows)
 

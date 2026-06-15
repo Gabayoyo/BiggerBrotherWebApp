@@ -20,15 +20,10 @@ class PoseEstimator:
         fingerprint = f"{video_path}{stat.st_size}{stat.st_mtime}"
         return hashlib.md5(fingerprint.encode()).hexdigest()
 
-    def process_video(self, video_path: Path) -> list[FrameData]:
+    def process_video(self, video_path: Path) -> tuple[list[FrameData], float]:
         """
-        Process the video and return a list of FrameData.
+        Process the video and return a list of FrameData and the frame rate.
         """
-
-        # cache handling
-        cache_path = self.cache_dir / f"{self._cache_key(video_path)}.pkl"
-        if cache_path.exists():
-            return pickle.loads(cache_path.read_bytes())
             
         # get video capture
         capture = cv2.VideoCapture(str(video_path))
@@ -36,6 +31,11 @@ class PoseEstimator:
             raise ValueError(f"Could not open video: {video_path}")
         
         fps = capture.get(cv2.CAP_PROP_FPS) or 30.0
+        
+        # cache handling
+        cache_path = self.cache_dir / f"{self._cache_key(video_path)}.pkl"
+        if cache_path.exists():
+            return pickle.loads(cache_path.read_bytes()), fps
 
         # initialise mediapipe pose landmarker
         base_options = mp_python.BaseOptions(model_asset_path=str(self.model_path))
@@ -81,4 +81,4 @@ class PoseEstimator:
             cache_path.parent.mkdir(exist_ok=True)
             cache_path.write_bytes(pickle.dumps(frame_data_list))
 
-        return frame_data_list
+        return frame_data_list, fps

@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from scipy.signal import savgol_filter
 import re
@@ -8,8 +7,21 @@ from dto.frame_data import FrameData
     
 def smooth_floats(signal: np.array, window_size: int = 5) -> list[float]:
     """Apply a moving average filter to smooth the signal."""
-    result = savgol_filter(signal, window_length=window_size, polyorder=2).tolist()
-    return result
+
+    # Copy to avoid modifying the original array
+    signal = signal.copy().astype(float)
+    
+    # Find indices where signal is not NaN
+    not_nan = ~np.isnan(signal)
+    if not np.all(not_nan):
+        # Interpolate NaNs using linear interpolation (or more advanced methods)
+        x = np.arange(len(signal))
+        signal[np.isnan(signal)] = np.interp(
+            x[np.isnan(signal)], x[not_nan], signal[not_nan]
+        )
+
+    smoothed = savgol_filter(signal, window_length=window_size, polyorder=2)
+    return smoothed.tolist()
 
 def smooth_landmark_trajectory(
     frame_data: list[FrameData],

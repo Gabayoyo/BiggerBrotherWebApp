@@ -15,7 +15,7 @@ class BiggerBrother:
         self.input_path = Path(args.input_path) if args.input_path else None
         self.weight = args.weight
         self.exercise = sanitise_exercise_input(args.exercise)
-        self.unilateral = sanitise_unilateral_input(args.unilateral)
+        self.laterality = sanitise_unilateral_input(args.laterality)
         self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
         self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
         self.model_path = ensure_model()
@@ -56,7 +56,7 @@ class BiggerBrother:
         print(self.input_path)
         print(self.exercise)
         print(self.weight)
-        print(self.unilateral)
+        print(self.laterality)
         print(self.calibration_path)
         print(self.model_path)
         print(self.cache_dir)
@@ -68,8 +68,10 @@ class BiggerBrother:
         #   velocity_estimate = self.calculate_velocity(calibration_result)
 
         if self.input_path:
-            result = self.pose_estimator.process_video(self.input_path)
-            metrics = compute_metrics(result, visualise=self.visualise, exercise=self.exercise, unilateral=self.unilateral)
+            result, fps = self.pose_estimator.process_video(self.input_path)
+            metrics = compute_metrics(result, visualise=self.visualise, exercise=self.exercise, laterality=self.laterality, fps=fps)
+            result = RepAnalysisResult(video_path=self.input_path, exercise=self.exercise, metrics=metrics)
+            print(result.summary_table())
 
 def main():
     parser = argparse.ArgumentParser(
@@ -95,7 +97,7 @@ def main():
     )
 
     parser.add_argument(
-        "--unilateral",
+        "--laterality",
         type=str,
         default="bilateral",
         help="Specify if the exercise is unilateral (e.g. 'left' or 'right')"

@@ -1,5 +1,5 @@
 from dto.frame_data import Landmark
-from exercises import exercise
+from exercise import exercise
 import numpy as np
 
 def _calculate_angle(a: Landmark, b: Landmark, c: Landmark) -> float:
