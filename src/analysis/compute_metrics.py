@@ -47,7 +47,7 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
         if start <= end and end < len(velocities):
             peak = max(velocities[start : end + 1])
         else:
-            peak = None   # or 0.0
+            peak = 0.0
         updated_metrics.append(replace(rep, peak_concentric_speed_ms=peak))
 
     return updated_metrics
