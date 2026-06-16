@@ -4,7 +4,7 @@
 # Main functions for analysis
 from analysis.pose_estimator import PoseEstimator # class for estimating pose data from videos
 from analysis.compute_metrics import compute_metrics # main metric pipeline function
-from analysis.compute_rep_metrics import compute_rep_metrics # function for computing rep-level metrics from list of angles
+from analysis.compute_rep import compute_rep_metrics # function for computing rep-level metrics from list of angles
 
 # Key DTOs
 from dto.frame_data import FrameData, Landmark

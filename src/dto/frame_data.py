@@ -68,6 +68,19 @@ class FrameData:
         """Return only landmarks with high visibility"""
         return [(i, lm) for i, lm in enumerate(self.landmarks) if lm.visibility > 0.5]
     
+    def get_limb(self, joints: tuple[int, int, int]) -> tuple[Landmark, Landmark, Landmark]:
+        """Get three landmarks corresponding to a limb (e.g., elbow angle)"""
+        return (
+            self.get_world_landmark(joints[0]),
+            self.get_world_landmark(joints[1]),
+            self.get_world_landmark(joints[2])
+        )
+    
+    def get_lm_xyzv_by_name(self, name: str) -> tuple[np.ndarray, float]:
+        """Return (x, y, z) and visibility for a landmark by name"""
+        lm = self.get_world_landmark_by_name(name)
+        return lm.to_array(), lm.visibility
+    
     @classmethod
     def from_mediapipe(cls, frame_num: int, timestamp: float, pose_landmarks, world_landmarks):
         """Create FrameData from MediaPipe pose_landmarks object"""

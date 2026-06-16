@@ -49,9 +49,16 @@ ANGLE = {
     "HIP_RIGHT": ('RIGHT_SHOULDER', 'RIGHT_HIP', 'RIGHT_KNEE'),
 }
 
+# which angles we are interested in for computing angle/ROM
 ANGLES_OF_INTEREST = {
     "tricep_extension": ["ELBOW_LEFT", "ELBOW_RIGHT"],
     "bicep_curl": ["ELBOW_LEFT", "ELBOW_RIGHT"],
+}
+
+# which points we are interested in for computing velocity
+LANDMARK_OF_INTEREST = {
+    "tricep_extension": ["LEFT_WRIST", "RIGHT_WRIST"],
+    "bicep_curl": ["LEFT_WRIST", "RIGHT_WRIST"],
 }
 
 def get_landmark_indices_from_angle(angle_name: str) -> tuple[int, int, int]:
