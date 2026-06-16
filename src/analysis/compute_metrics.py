@@ -4,7 +4,7 @@
 from dto.frame_data import FrameData
 from dto.results import RepMetric
 from analysis.visualiser import animate_skeleton
-from analysis.rep_detection import detect_reps
+from analysis.compute_rep_metrics import compute_rep_metrics
 from utils.kinematics import derive_angles
 from utils.utils import smooth_floats
 from dto.exercise import get_exercise
@@ -30,7 +30,7 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
         anim = animate_skeleton(frame_data)
 
     # count reps, return rep metrics
-    metrics = detect_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
+    metrics = compute_rep_metrics(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
 
     # metrics = compute_velocity_metrics(metrics, frame_data, exercise_info, fps)
 

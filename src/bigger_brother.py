@@ -1,5 +1,6 @@
 import argparse
 
+from dto.frame_data import FrameData
 from dto.results import RepAnalysisResult, RirAnalysisResult
 from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
@@ -26,9 +27,12 @@ class BiggerBrother:
     # analyses a given video and returns a RepAnalysisResult with rep metrics
     def analyse_form(
         self,
-        input_video: str | Path,
+        frame_data: list[FrameData],
+        fps: float
     ) -> RepAnalysisResult:
-        pass
+        metrics = compute_metrics(frame_data, visualise=self.visualise, exercise=self.exercise, laterality=self.laterality, fps=fps)
+        return RepAnalysisResult(video_path=self.input_path, exercise=self.exercise, metrics=metrics)
+
 
     def estimate_rir(
         self,
@@ -53,25 +57,14 @@ class BiggerBrother:
     # def list_processed_videos(self) -> list[Path]:
 
     def run(self):
-        print(self.input_path)
-        print(self.exercise)
-        print(self.weight)
-        print(self.laterality)
-        print(self.calibration_path)
-        print(self.model_path)
-        print(self.cache_dir)
-        print(self.cache_data)
-        print(self.visualise)
-
         # if self.calibration_path:
         #   calibration_result = self.pose_estimator.process_video(self.calibration_path)
         #   velocity_estimate = self.calculate_velocity(calibration_result)
 
         if self.input_path:
             result, fps = self.pose_estimator.process_video(self.input_path)
-            metrics = compute_metrics(result, visualise=self.visualise, exercise=self.exercise, laterality=self.laterality, fps=fps)
-            result = RepAnalysisResult(video_path=self.input_path, exercise=self.exercise, metrics=metrics)
-            print(result.summary_table())
+            rep_analysis_result = self.analyse_form(frame_data=result, fps=fps)
+            print(rep_analysis_result.summary_table())
 
 def main():
     parser = argparse.ArgumentParser(

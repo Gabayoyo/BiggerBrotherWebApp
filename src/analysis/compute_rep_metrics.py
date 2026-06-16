@@ -2,7 +2,7 @@ from scipy.signal import find_peaks
 
 from dto.rep_metric import RepMetric
 
-def detect_reps(
+def compute_rep_metrics(
     angles: list[float],
     fps: float,
     is_flexion: bool = True,
