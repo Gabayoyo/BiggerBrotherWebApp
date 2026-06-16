@@ -7,7 +7,7 @@ from analysis.visualiser import animate_skeleton
 from analysis.rep_detection import detect_reps
 from utils.kinematics import derive_angles
 from utils.utils import smooth_floats
-from exercise import get_exercise
+from dto.exercise import get_exercise
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,7 +31,13 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
 
     # count reps, return rep boundaries
 
-    return detect_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
+    boundaries = detect_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
+    metrics = []
+
+    for boundary in boundaries:
+        metrics.append(RepMetrics(boundaries=boundary, peak_concentric_speed_ms=0.0))
+
+    return metrics
 
     # landmarks are smoothed before velocity calculation to reduce noise
     # smoothed_landmarks = smooth_landmark_trajectory(frame_data, landmark_index=LANDMARK_INDICES['LEFT_WRIST'])

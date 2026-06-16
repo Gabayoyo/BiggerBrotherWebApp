@@ -1,23 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
-
-@dataclass(frozen=True)
-class RepBoundaries:
-    """Structural info known as soon as a rep is detected."""
-    rep_number: int
-    eccentric_start_frame: int
-    eccentric_end_frame: int
-    concentric_start_frame: int
-    concentric_end_frame: int
-    rep_duration_s: float
-
-@dataclass(frozen=True)
-class RepMetrics:
-    """Derived metrics, computed from RepBoundaries + frame data."""
-    boundaries: RepBoundaries
-    rom_degrees: float
-    peak_concentric_speed_ms: float
+from dto.rep_metric import RepMetrics
     
 @dataclass
 class RepAnalysisResult:
@@ -29,12 +12,12 @@ class RepAnalysisResult:
 
     def summary_table(self) -> str:
         """Return a formatted string table of per-rep metrics."""
-        header = f"{'Rep':>4} {'ROM°':>8} {'Ecc m/s':>8} {'Con m/s':>8} {'Peak m/s':>8} {'Dur(s)':>7}"
+        header = f"{'Rep':>4} {'ROM°':>8} {'Con m/s':>8} {'Dur(s)':>7}"
         rows = [header, "-" * len(header)]
         for m in self.metrics:
             rows.append(
                 f"{m.boundaries.rep_number:>4} "
-                f"{m.rom_degrees:>8.1f} "
+                f"{m.boundaries.rom_degrees:>8.1f} "
                 f"{m.peak_concentric_speed_ms:>8.2f} "
                 f"{m.boundaries.rep_duration_s:>7.2f}"
             )

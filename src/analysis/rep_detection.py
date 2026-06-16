@@ -1,112 +1,86 @@
-import numpy as np
 from scipy.signal import find_peaks
-from typing import List
 
-from dto.results import RepMetrics, RepBoundaries
+from dto.rep_metric import RepMetrics, RepBoundaries
 
-def detect_reps(angles: List[float], fps: float,
-                is_flexion: bool,
-                prominence_deg: float = 5.0,
-                min_phase_duration_s: float = 0.2) -> List[RepMetrics]:
-    """
-    Detect repetitions from a smoothed joint-angle sequence.
+def detect_reps(
+    angles: list[float],
+    fps: float,
+    is_flexion: bool = True,
+    prominence: float = 30,
+) -> list[RepBoundaries]:
 
-    Parameters
-    ----------
-    angles : list of float, length N
-        Smoothed joint angle at each frame.
-    fps : float
-        Frames per second of the video.
-    eccentric_decreasing : bool
-        True if the angle decreases during the eccentric phase
-        (e.g. squat, push-up), False if it increases (e.g. bicep curl).
-    prominence_deg : float
-        Minimum angular prominence (deg) for a reversal to be counted.
-    min_phase_duration_s : float
-        Minimum time (seconds) between direction changes to avoid jitter.
+    values = [a for a in angles if a is not None]
+    frames = list(range(len(values)))
 
-    Returns
-    -------
-    list of RepMetrics
-        One entry per detected full repetition.
-    """
-    angles = np.asarray(angles, dtype=float)
-    n = len(angles)
-    if n < 3:
+    peaks, _   = find_peaks( values, prominence=prominence)
+    troughs, _ = find_peaks([-v for v in values], prominence=prominence)
+
+    extrema = (
+        [(frames[i], values[i], "peak")   for i in peaks] +
+        [(frames[i], values[i], "trough") for i in troughs]
+    )
+    extrema.sort(key=lambda x: x[0])
+
+    if not extrema:
         return []
 
-    # 1. Velocity (deg/s)
-    velocity = np.gradient(angles, 1.0 / fps)
-
-    # 2. Find extrema
-    min_frames = int(min_phase_duration_s * fps)
-    peaks, _ = find_peaks(angles, prominence=prominence_deg, distance=min_frames)
-    valleys, _ = find_peaks(-angles, prominence=prominence_deg, distance=min_frames)
-
-    # Combine and sort by frame index
-    events = [(f, 'peak') for f in peaks] + [(f, 'valley') for f in valleys]
-    events.sort(key=lambda x: x[0])
-
-    # 3. Pair into reps
-    rep_metrics = []
-    rep_num = 0
-    i = 0
-    while i < len(events) - 2:
-        f1, t1 = events[i]
-        f2, t2 = events[i+1]
-        f3, t3 = events[i+2]
-
-        # Must alternate: t1 != t2 and t1 == t3
-        if t1 == t2 or t1 != t3:
-            i += 1
-            continue
-
-        # 4. Label phases according to is_flexion
-        # Leg 1: f1 -> f2, Leg 2: f2 -> f3
-        # Determine if leg1 is decreasing (peak -> valley) or increasing (valley -> peak)
-        leg1_is_decreasing = (t1 == 'peak' and t2 == 'valley')
-
-        if not is_flexion:
-            if leg1_is_decreasing:
-                ecc_start, ecc_end = f1, f2
-                con_start, con_end = f2, f3
+    # Merge consecutive same-type extrema, keeping the more extreme value
+    cleaned = [extrema[0]]
+    for curr in extrema[1:]:
+        prev = cleaned[-1]
+        if curr[2] == prev[2]:
+            if curr[2] == "peak":
+                cleaned[-1] = curr if curr[1] > prev[1] else prev
             else:
-                # leg1 is increasing, so it becomes concentric, leg2 eccentric
-                con_start, con_end = f1, f2
-                ecc_start, ecc_end = f2, f3
+                cleaned[-1] = curr if curr[1] < prev[1] else prev
         else:
-            # eccentric is increasing
-            if leg1_is_decreasing:
-                con_start, con_end = f1, f2
-                ecc_start, ecc_end = f2, f3
+            cleaned.append(curr)
+
+    results: list[RepMetrics] = []
+    pending_trough = (frames[0], values[0], "trough")
+    rep_number = 1
+
+    for i, e in enumerate(cleaned):
+        if e[2] == "trough":
+            pending_trough = e
+
+        elif e[2] == "peak" and pending_trough is not None:
+            peak_frame, peak_val = e[0], e[1]
+
+            next_trough = next(
+                (cleaned[j] for j in range(i + 1, len(cleaned)) if cleaned[j][2] == "trough"),
+                None,
+            )
+
+            trough_to_peak_frames = (pending_trough[0], peak_frame)
+            peak_to_trough_frames = (peak_frame, next_trough[0]) if next_trough else None
+            rom = round(peak_val)
+
+            if is_flexion:
+                con_start, con_end = trough_to_peak_frames
+                ecc_start = peak_frame                if peak_to_trough_frames else None
+                ecc_end   = next_trough[0]            if peak_to_trough_frames else None
             else:
-                ecc_start, ecc_end = f1, f2
-                con_start, con_end = f2, f3
+                ecc_start = pending_trough[0]         if peak_to_trough_frames else None
+                ecc_end   = peak_frame                if peak_to_trough_frames else None
+                con_start = peak_frame                if peak_to_trough_frames else trough_to_peak_frames[0]
+                con_end   = next_trough[0]            if peak_to_trough_frames else trough_to_peak_frames[1]
 
-        # 5. Build metrics
-        duration = (con_end - ecc_start) / fps
-        rom = abs(angles[ecc_end] - angles[ecc_start])
-        # peak concentric speed (absolute value)
-        conc_vel = velocity[con_start: con_end+1]
-        peak_speed = np.max(np.abs(conc_vel))
+            con_sec = (con_end - con_start) / fps
+            ecc_sec = ((ecc_end - ecc_start) / fps) if ecc_start is not None else 0.0
 
-        boundaries = RepBoundaries(
-            rep_number=rep_num + 1,
-            eccentric_start_frame=int(ecc_start),
-            eccentric_end_frame=int(ecc_end),
-            concentric_start_frame=int(con_start),
-            concentric_end_frame=int(con_end),
-            rep_duration_s=round(duration, 4)
-        )
-        metrics = RepMetrics(
-            boundaries=boundaries,
-            rom_degrees=round(rom, 2),
-            peak_concentric_speed_ms=round(peak_speed, 2)
-        )
-        rep_metrics.append(metrics)
-        rep_num += 1
+            boundary = RepBoundaries(
+                rep_number=rep_number,
+                concentric_start_frame=con_start,
+                concentric_end_frame=con_end,
+                eccentric_start_frame=ecc_start,
+                eccentric_end_frame=ecc_end,
+                rom_degrees=rom,
+                rep_duration_s=round(con_sec + ecc_sec, 3),
+            )
 
-        # Move to next potential rep (E2 becomes the start of next rep if pattern continues)
-        i += 2
+            rep_number += 1
+            pending_trough = None
+            results.append(boundary)
 
-    return rep_metrics
+    return results

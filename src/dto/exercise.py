@@ -1,4 +1,4 @@
-from landmark_dicts import ANGLE, get_landmark_indices_from_exercise
+from landmark_dicts import get_landmark_indices_from_exercise
 from dto.frame_data import FrameData
 
 class exercise:
