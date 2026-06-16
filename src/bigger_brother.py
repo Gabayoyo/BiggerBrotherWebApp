@@ -4,7 +4,7 @@ from dto.results import RepAnalysisResult, RirAnalysisResult
 from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
 from model import ensure_model
-from analysis.metrics import compute_metrics
+from analysis.compute_metrics import compute_metrics
 from utils.utils import sanitise_exercise_input, sanitise_unilateral_input
 
 CACHE_DIR = Path("./cache")

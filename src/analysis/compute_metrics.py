@@ -2,7 +2,7 @@
 # i.e. rep detection, concentric/eccentric phase segmentation, ROM calculation, speed calculation, etc.
 
 from dto.frame_data import FrameData
-from dto.results import RepMetrics
+from dto.results import RepMetric
 from analysis.visualiser import animate_skeleton
 from analysis.rep_detection import detect_reps
 from utils.kinematics import derive_angles
@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str, laterality: str, fps: float) -> RepMetrics:
+def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str, laterality: str, fps: float) -> list[RepMetric]:
     """
     Compute metrics from the pose estimation output.
     """
@@ -29,15 +29,9 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
     if visualise:
         anim = animate_skeleton(frame_data)
 
-    # count reps, return rep boundaries
+    # count reps, return rep metrics
+    metrics = detect_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
 
-    boundaries = detect_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
-    metrics = []
-
-    for boundary in boundaries:
-        metrics.append(RepMetrics(boundaries=boundary, peak_concentric_speed_ms=0.0))
+    # metrics = compute_velocity_metrics(metrics, frame_data, exercise_info, fps)
 
     return metrics
-
-    # landmarks are smoothed before velocity calculation to reduce noise
-    # smoothed_landmarks = smooth_landmark_trajectory(frame_data, landmark_index=LANDMARK_INDICES['LEFT_WRIST'])

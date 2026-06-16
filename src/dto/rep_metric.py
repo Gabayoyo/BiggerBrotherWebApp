@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from typing import Optional
 
 @dataclass(frozen=True)
-class RepBoundaries:
+class RepMetric:
     """Structural info known as soon as a rep is detected."""
     rep_number: int
     eccentric_start_frame: int
@@ -10,9 +11,4 @@ class RepBoundaries:
     concentric_end_frame: int
     rom_degrees: int
     rep_duration_s: float
-
-@dataclass(frozen=True)
-class RepMetrics:
-    """Derived metrics, computed from RepBoundaries + frame data."""
-    boundaries: RepBoundaries
-    peak_concentric_speed_ms: float
+    peak_concentric_speed_ms: Optional[float] = None

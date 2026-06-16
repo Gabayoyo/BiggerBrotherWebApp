@@ -1,13 +1,13 @@
 from scipy.signal import find_peaks
 
-from dto.rep_metric import RepMetrics, RepBoundaries
+from dto.rep_metric import RepMetric
 
 def detect_reps(
     angles: list[float],
     fps: float,
     is_flexion: bool = True,
     prominence: float = 30,
-) -> list[RepBoundaries]:
+) -> list[RepMetric]:
 
     values = [a for a in angles if a is not None]
     frames = list(range(len(values)))
@@ -36,7 +36,7 @@ def detect_reps(
         else:
             cleaned.append(curr)
 
-    results: list[RepMetrics] = []
+    results: list[RepMetric] = []
     pending_trough = (frames[0], values[0], "trough")
     rep_number = 1
 
@@ -69,7 +69,7 @@ def detect_reps(
             con_sec = (con_end - con_start) / fps
             ecc_sec = ((ecc_end - ecc_start) / fps) if ecc_start is not None else 0.0
 
-            boundary = RepBoundaries(
+            metric = RepMetric(
                 rep_number=rep_number,
                 concentric_start_frame=con_start,
                 concentric_end_frame=con_end,
@@ -77,10 +77,11 @@ def detect_reps(
                 eccentric_end_frame=ecc_end,
                 rom_degrees=rom,
                 rep_duration_s=round(con_sec + ecc_sec, 3),
+                peak_concentric_speed_ms=0 # TODO: set to none once velocity metrics are implemented later in pipeline
             )
 
             rep_number += 1
             pending_trough = None
-            results.append(boundary)
+            results.append(metric)
 
     return results
