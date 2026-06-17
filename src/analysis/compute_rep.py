@@ -57,27 +57,35 @@ def compute_reps(
             rom = round(peak_val)
 
             if is_flexion:
-                con_start, con_end = trough_to_peak_frames
-                ecc_start = peak_frame                if peak_to_trough_frames else None
-                ecc_end   = next_trough[0]            if peak_to_trough_frames else None
+                # Flexion exercise (bicep curl, leg curl, etc.)
+                # Concentric = peak → trough (angle decreasing)
+                con_start = peak_frame
+                con_end   = next_trough[0] if next_trough else None
+                # Eccentric = trough → peak (angle increasing)
+                ecc_start = pending_trough[0]
+                ecc_end   = peak_frame
             else:
-                ecc_start = pending_trough[0]         if peak_to_trough_frames else None
-                ecc_end   = peak_frame                if peak_to_trough_frames else None
-                con_start = peak_frame                if peak_to_trough_frames else trough_to_peak_frames[0]
-                con_end   = next_trough[0]            if peak_to_trough_frames else trough_to_peak_frames[1]
+                # Extension exercise (tricep pushdown, leg extension, etc.)
+                # Concentric = trough → peak (angle increasing)
+                con_start = pending_trough[0]
+                con_end   = peak_frame
+                # Eccentric = peak → trough (angle decreasing)
+                ecc_start = peak_frame
+                ecc_end   = next_trough[0] if next_trough else None
 
             con_sec = (con_end - con_start) / fps
-            ecc_sec = ((ecc_end - ecc_start) / fps) if ecc_start is not None else 0.0
+            ecc_sec = ((ecc_end - ecc_start) / fps) if ecc_start is not None and ecc_end is not None else 0.0
 
             metric = RepMetric(
                 rep_number=rep_number,
-                concentric_start_frame=con_start,
-                concentric_end_frame=con_end,
-                eccentric_start_frame=ecc_start,
-                eccentric_end_frame=ecc_end,
+                con_start_frame=con_start,
+                con_end_frame=con_end,
+                ecc_start_frame=ecc_start,
+                ecc_end_frame=ecc_end,
                 rom_degrees=rom,
                 rep_duration_s=round(con_sec + ecc_sec, 3),
-                peak_concentric_speed_ms=0 # TODO: set to none once velocity metrics are implemented later in pipeline
+                con_duration_s=round(con_sec, 3),
+                mean_concentric_speed_ms=None
             )
 
             rep_number += 1

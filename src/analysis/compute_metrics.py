@@ -23,7 +23,6 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
     """
     Compute metrics from the pose estimation output.
     """
-    # get more visible side
     exercise_info = get_exercise(exercise, laterality, frame_data)
 
     # find ROM, angular velocity and mean velocity -> rep metrics
@@ -35,19 +34,22 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
     if visualise:
         anim = animate_skeleton(frame_data)
 
-    # count reps, return rep metrics
+    # count reps, returns rep metrics
     metrics = compute_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
 
+    # returns velocities of each frame, which is used to compute peak concentric speed for each rep
     velocities = derive_velocity(exercise_info, fps)
 
     updated_metrics = []
     for rep in metrics:
-        start = rep.concentric_start_frame
-        end   = rep.concentric_end_frame
-        if start <= end and end < len(velocities):
-            peak = max(velocities[start : end + 1])
+        if rep.con_start_frame <= rep.con_end_frame and rep.con_end_frame < len(velocities):
+            # Extract the concentric velocity slice
+            segment = velocities[rep.con_start_frame : rep.con_end_frame + 1]
+            # Calculate the mean (average) instead of the max
+            mean_vel = sum(segment) / len(segment) if len(segment) > 0 else 0.0
         else:
-            peak = 0.0
-        updated_metrics.append(replace(rep, peak_concentric_speed_ms=peak))
+            mean_vel = 0.0
+
+        updated_metrics.append(replace(rep, mean_concentric_speed_ms=mean_vel))
 
     return updated_metrics

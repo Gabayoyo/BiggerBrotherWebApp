@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from dto.rep_metric import RepMetric
+from tabulate import tabulate
     
 @dataclass
 class RepAnalysisResult:
@@ -10,18 +11,28 @@ class RepAnalysisResult:
     exercise: str
     metrics: list[RepMetric]
 
-    def summary_table(self) -> str:
-        """Return a formatted string table of per-rep metrics."""
-        header = f"{'Rep':>4} {'ROM°':>8} {'Con m/s':>8} {'Dur(s)':>7}"
-        rows = [header, "-" * len(header)]
+    def summary_table(self, title: str = "Analysis Results") -> str:
+        headers = ["Rep", "ROM°", "Mean Concentric Speed m/s", "Concentric Duration (s)", "Total Duration (s)"]
+        table_data = []
         for m in self.metrics:
-            rows.append(
-                f"{m.rep_number:>4} "
-                f"{m.rom_degrees:>8.1f} "
-                f"{m.peak_concentric_speed_ms:>8.2f} "
-                f"{m.rep_duration_s:>7.2f}"
-            )
-        return "\n".join(rows)
+            table_data.append([
+                m.rep_number,
+                f"{m.rom_degrees:.1f}",
+                f"{m.mean_concentric_speed_ms:.2f}",
+                f"{m.con_duration_s:.2f}" if m.con_duration_s is not None else "N/A",
+                f"{m.rep_duration_s:.2f}",
+            ])
+        table_str = tabulate(table_data, headers=headers, tablefmt="simple")
+        # Centre the title over the table
+        table_width = len(table_str.splitlines()[0])   # width of the separator line
+        title_line = title.center(table_width)
+        return f"{title_line}\n{table_str}"
+
+    def console_output(self) -> str:
+        """Return a string representation of the analysis result for console output."""
+        return (
+            f"\n{self.summary_table(f'Analysis Results ({self.exercise})')}\n"
+        )
 
 # needs duplication of RepMetrics as both are intended to be exclusive
 # as return to their respective functions/pipelines/endpoints.

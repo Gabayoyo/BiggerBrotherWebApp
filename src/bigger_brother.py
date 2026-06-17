@@ -24,7 +24,7 @@ class BiggerBrother:
         self.visualise = args.visualise if args.visualise else False
         self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data)
 
-    # analyses a given video and returns a RepAnalysisResult with rep metrics
+    # given frame data from pose estimation, returns a RepAnalysisResult with rep metrics
     def analyse_form(
         self,
         frame_data: list[FrameData],
@@ -48,23 +48,16 @@ class BiggerBrother:
         """Handle video file upload and return the saved file path."""
         pass
 
-    # def rir_from_metrics(
-    # self,
-    # target_metrics: list[RepMetrics],
-    # failure_path: str | Path
-    # ) -> RirAnalysisResult:
-
-    # def list_processed_videos(self) -> list[Path]:
-
     def run(self):
         # if self.calibration_path:
         #   calibration_result = self.pose_estimator.process_video(self.calibration_path)
         #   velocity_estimate = self.calculate_velocity(calibration_result)
 
+        # process target video and analyze reps
         if self.input_path:
             result, fps = self.pose_estimator.process_video(self.input_path)
             rep_analysis_result = self.analyse_form(frame_data=result, fps=fps)
-            print(rep_analysis_result.summary_table())
+            print(rep_analysis_result.console_output())
 
 def main():
     parser = argparse.ArgumentParser(
