@@ -4,6 +4,7 @@ from dto.exercise import exercise
 from dto.frame_data import FrameData
 from landmark_dicts import LANDMARK_OF_INTEREST
 
+# main function to derive velocity from frame data
 def derive_velocity(
     exercise: exercise,
     fps: float,
@@ -12,13 +13,14 @@ def derive_velocity(
     if n_frames < 2:
         return [0.0] * n_frames
 
-    # LANDMARK_OF_INTEREST returns (left_landmark_index, right_landmark_index)
-
-    # --- 1. Extract landmark positions ---
+    # get landmark positions for the exercise of interest, handling bilateral cases
     positions = []
 
+    # iterate every frame, get frame's xyz position, average it if bilateral
+    # then apply a low-pass filter, then compute velocity using central differences
     for frame in exercise.frame_data:
 
+        # if just right side, use right landmark (always index 1 for LANDMARK_OF_INTEREST)
         if exercise.bilateral == "right":
             lm_key_1 = LANDMARK_OF_INTEREST[exercise.name][1]
             pos_right, conf_right = frame.get_lm_xyzv_by_name(lm_key_1)
@@ -27,9 +29,11 @@ def derive_velocity(
             else:
                 pos = np.full(3, np.nan)
         else:
+            # else at the very least is left
             lm_key_1 = LANDMARK_OF_INTEREST[exercise.name][0]
             pos_left, conf_left = frame.get_lm_xyzv_by_name(lm_key_1)
 
+            # check if bilateral, then get right side too and average based on confidence
             if exercise.bilateral == "bilateral":
                 lm_key_2 = LANDMARK_OF_INTEREST[exercise.name][1]
                 pos_right, conf_right = frame.get_lm_xyzv_by_name(lm_key_2)
@@ -46,7 +50,7 @@ def derive_velocity(
 
     positions = np.array(positions, dtype=np.float64)  # shape (N, 3)
 
-    # --- 2. Handle missing data (NaNs from invisible frames) ---
+    # handle nans by interpolating missing values for each axis separately
     if np.any(np.isnan(positions)):
         for col in range(3):
             col_vals = positions[:, col]
@@ -62,13 +66,13 @@ def derive_velocity(
                 )
                 positions[:, col] = col_vals
 
-    # --- 3. Low-pass filter ---
+    # apply low pass filter to smooth the positions
     nyq = 0.5 * fps
     b, a = butter(4, 6 / nyq, btype='low', analog=False)
     for col in range(3):
         positions[:, col] = filtfilt(b, a, positions[:, col], axis=0)
 
-    # --- 4. Compute velocity magnitude using central differences ---
+    # compute velocity using central differences
     dt = 1.0 / fps
     velocities = np.zeros(n_frames, dtype=np.float64)
 

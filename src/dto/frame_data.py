@@ -2,18 +2,19 @@ from dataclasses import dataclass
 from landmark_dicts import LANDMARK_INDICES
 import numpy as np
 
+# a single landmark point in 3D space, with visibility and presence information
 @dataclass
 class Landmark:
     """A single 3D landmark point"""
-    x: float      # Normalized x coordinate (0-1)
-    y: float      # Normalized y coordinate (0-1)
-    z: float      # Depth (relative to torso center)
-    visibility: float  # 0-1, how likely it's visible
-    presence: float    # 0-1, if landmark is present in frame
+    x: float      
+    y: float      
+    z: float      # depth; estimated
+    visibility: float  # how likely it's visible
+    presence: float    # if landmark is present in frame
 
+    # checks if landmark is confidently visible
     @property
     def visible(self) -> bool:
-        """Whether landmark is confidently visible."""
         return self.visibility > 0.7
     
     def to_array(self) -> np.ndarray:
@@ -30,12 +31,11 @@ class Landmark:
             presence=landmark.presence
         )
 
-
+# data class representing pose data for a single video frame
 @dataclass
 class FrameData:
-    """Pose data for a single video frame"""
     frame_number: int
-    timestamp_s: float  # Seconds from start
+    timestamp_s: float  # seconds from start
     landmarks: list[Landmark]  # 2D landmarks (normalized)
     world_landmarks: list[Landmark] # 3D landmarks (meters, relative to world origin)
     

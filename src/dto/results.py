@@ -2,15 +2,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from dto.rep_metric import RepMetric
 from tabulate import tabulate
-    
+
+# returned by analyse_reps(). Contains the per-rep metrics as well as the exercise and video path
+# does not contain RiR estimates
+# designed solely as a DTO for the rep analysis endpoint
 @dataclass
 class RepAnalysisResult:
-    """Returned by analyze_reps(). Contains per-rep metrics only."""
+
     video_path: Path
-    # May want a more complex field type here if we want to include metadata about the exercise/video
+    # may want a more complex field type here if we want to include metadata about the exercise/video
     exercise: str
     metrics: list[RepMetric]
 
+    # returns a string table representation of the analysis result for console output.
     def summary_table(self, title: str = "Analysis Results") -> str:
         headers = ["Rep", "ROM°", "Mean Concentric Speed m/s", "Concentric Duration (s)", "Total Duration (s)"]
         table_data = []
@@ -23,8 +27,7 @@ class RepAnalysisResult:
                 f"{m.rep_duration_s:.2f}",
             ])
         table_str = tabulate(table_data, headers=headers, tablefmt="simple")
-        # Centre the title over the table
-        table_width = len(table_str.splitlines()[0])   # width of the separator line
+        table_width = len(table_str.splitlines()[0])
         title_line = title.center(table_width)
         return f"{title_line}\n{table_str}"
 
@@ -34,21 +37,18 @@ class RepAnalysisResult:
             f"\n{self.summary_table(f'Analysis Results ({self.exercise})')}\n"
         )
 
-# needs duplication of RepMetrics as both are intended to be exclusive
-# as return to their respective functions/pipelines/endpoints.
-# Can refactor later if we want to decouple them
+# returned by estimate_rir(). Contains target metrics + RiR estimate
+# option to return failure metrics as well, but not required for the endpoint
+# designed solely as a DTO for the RiR estimation endpoint
 @dataclass
 class RirAnalysisResult:
-    """Returned by estimate_rir(). Contains target metrics + RiR estimate."""
+
     video_path: Path
-    metrics: list[RepMetric]          # rep metrics of the target video
+    metrics: list[RepMetric]
     rir_estimate: int
     # rir_rationale: str
-    # Optionally include failure video metrics if you want to display them
     failure_metrics: list[RepMetric] | None = None
 
     def summary_table(self) -> str:
         base = RepAnalysisResult(self.video_path, self.metrics).summary_table()
         return base + f"\nEstimated RiR: {self.rir_estimate} rep(s)"
-    
-# probably a dto for metrics attached to a video file

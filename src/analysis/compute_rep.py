@@ -2,6 +2,8 @@ from scipy.signal import find_peaks
 
 from dto.rep_metric import RepMetric
 
+# computes reps from a list of angles
+# uses peak/trough detection to find reps
 def compute_reps(
     angles: list[float],
     fps: float,
@@ -12,6 +14,7 @@ def compute_reps(
     values = [a for a in angles if a is not None]
     frames = list(range(len(values)))
 
+    # gets peaks and troughs here
     peaks, _   = find_peaks( values, prominence=prominence)
     troughs, _ = find_peaks([-v for v in values], prominence=prominence)
 
@@ -24,7 +27,7 @@ def compute_reps(
     if not extrema:
         return []
 
-    # Merge consecutive same-type extrema, keeping the more extreme value
+    # merge consecutive same-type extrema, keeping the more extreme value
     cleaned = [extrema[0]]
     for curr in extrema[1:]:
         prev = cleaned[-1]
@@ -52,24 +55,24 @@ def compute_reps(
                 None,
             )
 
-            trough_to_peak_frames = (pending_trough[0], peak_frame)
-            peak_to_trough_frames = (peak_frame, next_trough[0]) if next_trough else None
+            # save bottom ROM for data representation later
+            rom_start = pending_trough[1]
             rom = round(peak_val)
 
             if is_flexion:
-                # Flexion exercise (bicep curl, leg curl, etc.)
-                # Concentric = peak → trough (angle decreasing)
+                # flexion exercise (bicep curl, leg curl, etc.)
+                # concentric = (angle decreasing)
                 con_start = peak_frame
                 con_end   = next_trough[0] if next_trough else None
-                # Eccentric = trough → peak (angle increasing)
+                # eccentric = (angle increasing)
                 ecc_start = pending_trough[0]
                 ecc_end   = peak_frame
             else:
-                # Extension exercise (tricep pushdown, leg extension, etc.)
-                # Concentric = trough → peak (angle increasing)
+                # extension exercise (tricep pushdown, leg extension, etc.)
+                # concentric = (angle increasing)
                 con_start = pending_trough[0]
                 con_end   = peak_frame
-                # Eccentric = peak → trough (angle decreasing)
+                # eccentric = (angle decreasing)
                 ecc_start = peak_frame
                 ecc_end   = next_trough[0] if next_trough else None
 
@@ -82,6 +85,7 @@ def compute_reps(
                 con_end_frame=con_end,
                 ecc_start_frame=ecc_start,
                 ecc_end_frame=ecc_end,
+                rom_start=rom_start,
                 rom_degrees=rom,
                 rep_duration_s=round(con_sec + ecc_sec, 3),
                 con_duration_s=round(con_sec, 3),

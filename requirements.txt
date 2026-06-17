@@ -4,3 +4,4 @@ mediapipe
 ipywidgets
 pandas
 scipy
+tabulate

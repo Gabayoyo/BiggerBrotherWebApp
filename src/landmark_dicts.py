@@ -1,6 +1,6 @@
 # MediaPipe landmark indices (0-32)
 LANDMARK_INDICES = {
-    # Face
+    # face
     'NOSE': 0,
     'LEFT_EYE_INNER': 1,
     'LEFT_EYE': 2,
@@ -13,7 +13,7 @@ LANDMARK_INDICES = {
     'LEFT_MOUTH': 9,
     'RIGHT_MOUTH': 10,
     
-    # Torso
+    # torso
     'LEFT_SHOULDER': 11,
     'RIGHT_SHOULDER': 12,
     'LEFT_ELBOW': 13,
@@ -29,7 +29,7 @@ LANDMARK_INDICES = {
     'LEFT_HIP': 23,
     'RIGHT_HIP': 24,
     
-    # Legs
+    # legs
     'LEFT_KNEE': 25,
     'RIGHT_KNEE': 26,
     'LEFT_ANKLE': 27,
@@ -40,6 +40,7 @@ LANDMARK_INDICES = {
     'RIGHT_FOOT_INDEX': 32,
 }
 
+# triplets of landmarks for angle calculations (joint angles)
 ANGLE = {
     "ELBOW_LEFT": ('LEFT_SHOULDER', 'LEFT_ELBOW', 'LEFT_WRIST'),
     "ELBOW_RIGHT": ('RIGHT_SHOULDER', 'RIGHT_ELBOW', 'RIGHT_WRIST'),
@@ -49,28 +50,30 @@ ANGLE = {
     "HIP_RIGHT": ('RIGHT_SHOULDER', 'RIGHT_HIP', 'RIGHT_KNEE'),
 }
 
-# which angles we are interested in for computing angle/ROM
+# which angles we are interested in for a given exercise when computing angle/ROM
 ANGLES_OF_INTEREST = {
     "tricep_extension": ["ELBOW_LEFT", "ELBOW_RIGHT"],
     "bicep_curl": ["ELBOW_LEFT", "ELBOW_RIGHT"],
 }
 
-# which points we are interested in for computing velocity
+# which points we are interested in for a given exercise when computing velocity
 LANDMARK_OF_INTEREST = {
     "tricep_extension": ["LEFT_WRIST", "RIGHT_WRIST"],
     "bicep_curl": ["LEFT_WRIST", "RIGHT_WRIST"],
 }
 
+# given an angle name (e.g., 'ELBOW_LEFT'), return the corresponding landmark indices.
 def get_landmark_indices_from_angle(angle_name: str) -> tuple[int, int, int]:
-    """Given an angle name (e.g., 'ELBOW_LEFT'), return the corresponding landmark indices."""
+
     if angle_name not in ANGLE:
         raise ValueError(f"Angle '{angle_name}' not defined in ANGLE dictionary.")
     
     landmark_names = ANGLE[angle_name]
     return tuple(LANDMARK_INDICES[name] for name in landmark_names)
 
+# given an exercise name, return the corresponding landmark indices for all angles of interest.
 def get_landmark_indices_from_exercise(exercise_name: str) -> list[tuple[int, int, int]]:
-    """Given an exercise name (e.g., 'tricep_extension'), return the corresponding landmark indices for all angles of interest."""
+
     if exercise_name not in ANGLES_OF_INTEREST:
         raise ValueError(f"Exercise '{exercise_name}' not defined in ANGLES_OF_INTEREST dictionary.")
     

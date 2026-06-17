@@ -228,3 +228,4 @@ __marimo__/
 *.csv
 *.pkl
 *.gif
+*.pstats

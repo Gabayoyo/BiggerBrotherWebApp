@@ -18,17 +18,16 @@ from utils.velocity import derive_velocity
 
 from utils.velocity import derive_velocity
 
-
+# core function that computes metrics from the pose estimation output
 def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str, laterality: str, fps: float) -> list[RepMetric]:
-    """
-    Compute metrics from the pose estimation output.
-    """
+
+    # construct exercise instance from exercise name and laterality, which contains the relevant landmarks for angle derivation
     exercise_info = get_exercise(exercise, laterality, frame_data)
 
     # find ROM, angular velocity and mean velocity -> rep metrics
     angles = derive_angles(exercise_info)
 
-    # angle is smoothed afterwards; is better
+    # angle is smoothed afterwards - is better for angles
     smoothed_angles = smooth_floats(np.array(angles))
 
     if visualise:
@@ -37,15 +36,15 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
     # count reps, returns rep metrics
     metrics = compute_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)
 
-    # returns velocities of each frame, which is used to compute peak concentric speed for each rep
+    # returns velocities of each frame
     velocities = derive_velocity(exercise_info, fps)
 
+    # get mean concentric speed for each rep and update the metrics
     updated_metrics = []
     for rep in metrics:
+        
         if rep.con_start_frame <= rep.con_end_frame and rep.con_end_frame < len(velocities):
-            # Extract the concentric velocity slice
             segment = velocities[rep.con_start_frame : rep.con_end_frame + 1]
-            # Calculate the mean (average) instead of the max
             mean_vel = sum(segment) / len(segment) if len(segment) > 0 else 0.0
         else:
             mean_vel = 0.0

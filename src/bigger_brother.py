@@ -25,7 +25,7 @@ class BiggerBrother:
         self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data)
 
     # given frame data from pose estimation, returns a RepAnalysisResult with rep metrics
-    def analyse_form(
+    def analyse_reps(
         self,
         frame_data: list[FrameData],
         fps: float
@@ -56,7 +56,7 @@ class BiggerBrother:
         # process target video and analyze reps
         if self.input_path:
             result, fps = self.pose_estimator.process_video(self.input_path)
-            rep_analysis_result = self.analyse_form(frame_data=result, fps=fps)
+            rep_analysis_result = self.analyse_reps(frame_data=result, fps=fps)
             print(rep_analysis_result.console_output())
 
 def main():
