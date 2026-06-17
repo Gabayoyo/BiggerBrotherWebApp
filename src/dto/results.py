@@ -30,9 +30,8 @@ class RepAnalysisResult:
         table_width = len(table_str.splitlines()[0])
         title_line = title.center(table_width)
         return f"{title_line}\n{table_str}"
-
+    
     def console_output(self) -> str:
-        """Return a string representation of the analysis result for console output."""
         return (
             f"\n{self.summary_table(f'Analysis Results ({self.exercise})')}\n"
         )

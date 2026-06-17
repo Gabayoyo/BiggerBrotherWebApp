@@ -5,7 +5,6 @@ import numpy as np
 # a single landmark point in 3D space, with visibility and presence information
 @dataclass
 class Landmark:
-    """A single 3D landmark point"""
     x: float      
     y: float      
     z: float      # depth; estimated
@@ -22,7 +21,6 @@ class Landmark:
     
     @classmethod
     def from_mediapipe(cls, landmark):
-        """Convert MediaPipe landmark to our Landmark class"""
         return cls(
             x=landmark.x,
             y=landmark.y,
@@ -40,50 +38,48 @@ class FrameData:
     world_landmarks: list[Landmark] # 3D landmarks (meters, relative to world origin)
     
     def __post_init__(self):
-        """Validate landmarks count"""
         if len(self.landmarks) != 33:
             raise ValueError(f"Expected 33 landmarks, got {len(self.landmarks)}")
     
+    # get landmark by index or name
     def get_landmark(self, index: int) -> Landmark:
-        """Get landmark by MediaPipe index (0-32)"""
         return self.landmarks[index]
     
+    # get landmark by readable name
     def get_landmark_by_name(self, name: str) -> Landmark:
-        """Get landmark by readable name"""
         return self.landmarks[LANDMARK_INDICES[name]]
     
+    # get world landmark by index or name
     def get_world_landmark(self, index: int) -> Landmark:
-        """Get world landmark by MediaPipe index (0-32)"""
         return self.world_landmarks[index]
     
+    # get world landmark by readable name
     def get_world_landmark_by_name(self, name: str) -> Landmark:
-        """Get world landmark by readable name"""
         return self.world_landmarks[LANDMARK_INDICES[name]]
     
+    # get all landmarks as a numpy array (33, 3)
     def get_keypoints_array(self) -> np.ndarray:
-        """Get all landmarks as numpy array (33, 3)"""
         return np.array([lm.to_array() for lm in self.landmarks])
     
+    # get all landmarks with visibility > 0.7
     def get_visible_landmarks(self) -> list[tuple[int, Landmark]]:
-        """Return only landmarks with high visibility"""
-        return [(i, lm) for i, lm in enumerate(self.landmarks) if lm.visibility > 0.5]
+        return [(i, lm) for i, lm in enumerate(self.landmarks) if lm.visibility > 0.7]
     
+    # get the 3 landmarks given a tuple of indices representing a limb (e.g., shoulder, elbow, wrist)
     def get_limb(self, joints: tuple[int, int, int]) -> tuple[Landmark, Landmark, Landmark]:
-        """Get three landmarks corresponding to a limb (e.g., elbow angle)"""
         return (
             self.get_world_landmark(joints[0]),
             self.get_world_landmark(joints[1]),
             self.get_world_landmark(joints[2])
         )
     
+    # get the xyz position and visibility of a landmark by name
     def get_lm_xyzv_by_name(self, name: str) -> tuple[np.ndarray, float]:
-        """Return (x, y, z) and visibility for a landmark by name"""
         lm = self.get_world_landmark_by_name(name)
         return lm.to_array(), lm.visibility
     
     @classmethod
     def from_mediapipe(cls, frame_num: int, timestamp: float, pose_landmarks, world_landmarks):
-        """Create FrameData from MediaPipe pose_landmarks object"""
         landmarks = [
             Landmark.from_mediapipe(lm) 
             for lm in pose_landmarks.landmark

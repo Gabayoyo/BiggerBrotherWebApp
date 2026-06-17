@@ -4,10 +4,7 @@ import numpy as np
 
 # helper function that calculates the angle between three landmarks in 3D space
 def _calculate_angle(a: Landmark, b: Landmark, c: Landmark) -> float:
-    """
-    Calculate the angle at point b, formed by points a-b-c, in 3D.
-    Returns angle in degrees.
-    """
+    
     ba = a.to_array() - b.to_array()
     bc = c.to_array() - b.to_array()
 

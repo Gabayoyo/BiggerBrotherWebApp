@@ -45,7 +45,6 @@ class BiggerBrother:
         self,
         video_file
     ) -> Path:
-        """Handle video file upload and return the saved file path."""
         pass
 
     def run(self):

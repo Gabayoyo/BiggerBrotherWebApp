@@ -17,9 +17,6 @@ POSE_CONNECTIONS = [
 ]
 
 def animate_skeleton(frame_data_list, save_path=None, fps=30):
-    """
-    Create a 3D animation of pose landmarks with missing‑data‑friendly smoothing.
-    """
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
 
