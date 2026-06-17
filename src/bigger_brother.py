@@ -1,6 +1,7 @@
 import argparse
 
 from dto.frame_data import FrameData
+from dto.input_config import InputConfig
 from dto.results import RepAnalysisResult, RirAnalysisResult
 from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
@@ -15,43 +16,34 @@ CACHE_DIR = Path("./cache")
 # doubles as a service class with exposed methods for streamlit or library imports
 class BiggerBrother:
 
-    def __init__(self, args: argparse.Namespace):
-        self.input_path = Path(args.input_path) if args.input_path else None
-        self.weight = args.weight
-        self.exercise = sanitise_exercise_input(args.exercise)
-        self.laterality = sanitise_unilateral_input(args.laterality)
-        self.calibration_path = Path(args.calibration_path) if args.calibration_path else None
-        self.cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
+    def __init__(self, cache_dir: Path = None, cache_data: bool = False):
         self.model_path = ensure_model()
-        self.cache_data = args.cache_data if args.cache_data else False
-        self.visualise = args.visualise if args.visualise else False
-        self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data)
+        self.cache_dir = cache_dir or CACHE_DIR
+        self.cache_data = cache_data
+        self.pose_estimator = PoseEstimator(
+            self.model_path,
+            cache_dir=self.cache_dir,
+            cache_data=self.cache_data
+        )
 
     # ANALYSE_REPS "ENDPOINT"
     # given frame data from pose estimation, returns a RepAnalysisResult with rep metrics
-    def analyse_reps(self, video_path: Path) -> RepAnalysisResult:
+    def analyse_reps(self, video_path: Path, input_config: InputConfig) -> RepAnalysisResult:
         frame_data, fps = self.pose_estimator.process_video(video_path)
-        metrics = compute_metrics(frame_data, visualise=self.visualise, exercise=self.exercise, laterality=self.laterality, fps=fps)
-        return RepAnalysisResult(video_path=self.input_path, exercise=self.exercise, metrics=metrics)
+        
+        metrics = compute_metrics(
+            frame_data, 
+            visualise=input_config.visualise, 
+            exercise=input_config.exercise, 
+            laterality=input_config.laterality, 
+            fps=fps
+        )
+
+        return RepAnalysisResult(video_path=video_path, exercise=input_config.exercise, metrics=metrics)
 
     # ESTIMATE_RIR "ENDPOINT"
-    def estimate_rir(
-        self,
-        target_video: Path,
-        failure_video: Path,
-    ) -> RirAnalysisResult:
+    def estimate_rir(self, target_video: Path, failure_video: Path, input_config: InputConfig) -> RirAnalysisResult:
         pass
-
-    # run() method for CLI usage
-    def run(self):
-        # if self.calibration_path:
-        #   calibration_result = self.pose_estimator.process_video(self.calibration_path)
-        #   velocity_estimate = self.calculate_velocity(calibration_result)
-
-        # process target video and analyze reps
-        if self.input_path:
-            rep_analysis_result = self.analyse_reps(self.input_path)
-            print(rep_analysis_result.console_output())
 
 def main():
     parser = argparse.ArgumentParser(
@@ -110,8 +102,23 @@ def main():
 
     args = parser.parse_args()
 
-    app = BiggerBrother(args)
-    app.run()
+    service = BiggerBrother(
+        cache_dir=None,
+        cache_data=args.cache_data
+    )
+
+    config = InputConfig(
+        exercise=args.exercise,
+        weight=args.weight,
+        laterality=args.laterality,
+        visualise=args.visualise
+    )
+
+    # if calibration, estimate rir...
+
+    if args.input_path:
+        rep_analysis_result = service.analyse_reps(Path(args.input_path), config)
+        print(rep_analysis_result.console_output())
     
 if __name__ == "__main__":
     main()
