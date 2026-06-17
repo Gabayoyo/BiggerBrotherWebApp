@@ -10,6 +10,9 @@ from utils.utils import sanitise_exercise_input, sanitise_unilateral_input
 
 CACHE_DIR = Path("./cache")
 
+# main class for the BiggerBrother pipeline, which handles pose estimation, rep analysis, and RiR estimation
+# def run() purely for CLI usage
+# doubles as a service class with exposed methods for streamlit or library imports
 class BiggerBrother:
 
     def __init__(self, args: argparse.Namespace):
@@ -24,29 +27,22 @@ class BiggerBrother:
         self.visualise = args.visualise if args.visualise else False
         self.pose_estimator = PoseEstimator(self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data)
 
+    # ANALYSE_REPS "ENDPOINT"
     # given frame data from pose estimation, returns a RepAnalysisResult with rep metrics
-    def analyse_reps(
-        self,
-        frame_data: list[FrameData],
-        fps: float
-    ) -> RepAnalysisResult:
+    def analyse_reps(self, video_path: Path) -> RepAnalysisResult:
+        frame_data, fps = self.pose_estimator.process_video(video_path)
         metrics = compute_metrics(frame_data, visualise=self.visualise, exercise=self.exercise, laterality=self.laterality, fps=fps)
         return RepAnalysisResult(video_path=self.input_path, exercise=self.exercise, metrics=metrics)
 
-
+    # ESTIMATE_RIR "ENDPOINT"
     def estimate_rir(
         self,
-        target_video: str | Path,
-        failure_video: str | Path,
+        target_video: Path,
+        failure_video: Path,
     ) -> RirAnalysisResult:
         pass
 
-    def upload_video(
-        self,
-        video_file
-    ) -> Path:
-        pass
-
+    # run() method for CLI usage
     def run(self):
         # if self.calibration_path:
         #   calibration_result = self.pose_estimator.process_video(self.calibration_path)
@@ -54,8 +50,7 @@ class BiggerBrother:
 
         # process target video and analyze reps
         if self.input_path:
-            result, fps = self.pose_estimator.process_video(self.input_path)
-            rep_analysis_result = self.analyse_reps(frame_data=result, fps=fps)
+            rep_analysis_result = self.analyse_reps(self.input_path)
             print(rep_analysis_result.console_output())
 
 def main():
