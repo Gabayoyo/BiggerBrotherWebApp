@@ -1,7 +1,6 @@
 # BiggerBrotherWebApp
 
-A student project that extracts pose data from exercise videos and uses it to derive repetition metrics (reps, speed, durations) and estimate reps in reserve (RIR; proximity to failure) via personalised calibration data.  
-The tool works both as a command-line interface (CLI) and through a Streamlit web app (WIP).
+A computer vision software that extracts pose data from exercise videos and uses it to derive repetition metrics (reps, speed, durations) and estimate reps in reserve (RIR; proximity to failure) via personalised calibration data. The tool works both as a command-line interface (CLI) and through a Streamlit web app (WIP).
 
 ## What it does
 
