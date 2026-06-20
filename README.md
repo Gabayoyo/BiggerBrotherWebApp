@@ -16,7 +16,7 @@ The tool works both as a command-line interface (CLI) and through a Streamlit we
 
 ## Features
 
-- Supports exercises like **bicep curl** and **tricep extension** (extendable via configuration).
+- Supports extensible framework for future exercises.
 - Caching of pose data for faster re‑runs (`--cache-data`).
 - Choice of laterality: `bilateral`, `left`, or `right`.
 - Built entirely in Python with well‑known libraries.
@@ -51,6 +51,12 @@ Run the CLI from the project root:
 python3 src/bigger_brother.py path/to/video.mp4 "bicep_curl" 10 --laterality left --cache-data
 ``` 
 In this case, the video consists of a person curling 10kg just on their left arm. The metric data will also be cached locally.
+
+To run with a calibration video:
+```
+python3 src/bigger_brother.py path/to/video.mp4 "bicep_curl" 10 --calibration-path "path/to/calibration/video.mp4"
+``` 
+The program will first analyse the calibration video, creating a personalised velocity-load curve in order to best model individual fatigue during a set. This is the core functionality that allows for the estimation of reps in reserve.
 
 **Note: It is important to ensure input videos have good lighting and that lift is not obscured by any foreign objects. Ideally, the lift should be performed and recorded perpendicular to the camera in order to make sure MediaPipe's pose estimation model best estimates joint positions.**
 
