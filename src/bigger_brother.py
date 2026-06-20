@@ -42,8 +42,25 @@ class BiggerBrother:
         return RepAnalysisResult(video_path=video_path, exercise=input_config.exercise, metrics=metrics)
 
     # ESTIMATE_RIR "ENDPOINT"
-    def estimate_rir(self, target_video: Path, failure_video: Path, input_config: InputConfig) -> RirAnalysisResult:
-        pass
+    def estimate_rir(self, target_video_path: Path, calibration_video_path: Path, input_config: InputConfig) -> RirAnalysisResult:
+        # get load-velocity profile
+        # plot kg to velocity
+        # this finds 1RM
+        # VL (%) = 100 × (V_BEST - V_LAST) / V_BEST
+        # converts this velocity loss to percentage of repetitions performed
+        # RIR = (Reps Completed / % Reps Performed) - Reps Completed
+
+        frame_data, fps = self.pose_estimator.process_video(calibration_video_path)
+        
+        calibration_metrics = compute_metrics(
+            frame_data, 
+            visualise=input_config.visualise, 
+            exercise=input_config.exercise, 
+            laterality=input_config.laterality, 
+            fps=fps
+        )
+        
+        # LVP = get_loss_velocity_profile(calibration_metrics)
 
 def main():
     parser = argparse.ArgumentParser(
