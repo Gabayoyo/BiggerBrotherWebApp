@@ -8,6 +8,7 @@ class InputConfig:
     weight: float
     laterality: str = "bilateral"
     visualise: bool = False
+    visualise_curve: bool = False
 
     def __post_init__(self):
         # Validate / normalise immediately

@@ -42,7 +42,7 @@ def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str,
     # get mean concentric speed for each rep and update the metrics
     updated_metrics = []
     for rep in metrics:
-        
+
         if rep.con_start_frame <= rep.con_end_frame and rep.con_end_frame < len(velocities):
             segment = velocities[rep.con_start_frame : rep.con_end_frame + 1]
             mean_vel = sum(segment) / len(segment) if len(segment) > 0 else 0.0

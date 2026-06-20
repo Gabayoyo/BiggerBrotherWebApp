@@ -1,13 +1,12 @@
 import argparse
 
-from dto.frame_data import FrameData
+from analysis.compute_VL_curve import compute_VL_curve
 from dto.input_config import InputConfig
 from dto.results import RepAnalysisResult, RirAnalysisResult
 from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
 from model import ensure_model
 from analysis.compute_metrics import compute_metrics
-from utils.utils import sanitise_exercise_input, sanitise_unilateral_input
 
 CACHE_DIR = Path("./cache")
 
@@ -60,6 +59,8 @@ class BiggerBrother:
             fps=fps
         )
         
+        coeffs = compute_VL_curve(calibration_metrics, visualise_curve=input_config.visualise_curve)
+        print(f"VL curve coefficients:\n{coeffs}")
         # LVP = get_loss_velocity_profile(calibration_metrics)
 
 def main():
@@ -117,6 +118,12 @@ def main():
         help="Visualise the pose estimation results"
     )
 
+    parser.add_argument(
+        "--visualise-curve",
+        action="store_true",
+        help="Visualise the load-velocity curve"
+    )
+
     args = parser.parse_args()
 
     service = BiggerBrother(
@@ -128,10 +135,17 @@ def main():
         exercise=args.exercise,
         weight=args.weight,
         laterality=args.laterality,
-        visualise=args.visualise
+        visualise=args.visualise,
+        visualise_curve=args.visualise_curve
     )
 
     # if calibration, estimate rir...
+
+    rir = service.estimate_rir(
+        target_video_path=Path(args.input_path),
+        calibration_video_path=Path(args.input_path),
+        input_config=config
+    )
 
     if args.input_path:
         rep_analysis_result = service.analyse_reps(Path(args.input_path), config)

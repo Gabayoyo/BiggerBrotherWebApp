@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import butter, filtfilt
 from dto.exercise import exercise
-from dto.frame_data import FrameData
+from dto.rep_metric import RepMetric
 from landmark_dicts import LANDMARK_OF_INTEREST
 
 # main function to derive velocity from frame data
