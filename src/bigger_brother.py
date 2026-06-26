@@ -7,6 +7,7 @@ from analysis.pose_estimator import PoseEstimator
 from pathlib import Path
 from model import ensure_model
 from analysis.compute_metrics import compute_metrics
+from analysis.estimate_rir import estimate_rir_from_curve
 
 CACHE_DIR = Path("./cache")
 
@@ -60,8 +61,7 @@ class BiggerBrother:
         )
         
         coeffs = compute_VL_curve(calibration_metrics, visualise_curve=input_config.visualise_curve)
-        print(f"VL curve coefficients:\n{coeffs}")
-        # LVP = get_loss_velocity_profile(calibration_metrics)
+        estimated_rir = estimate_rir_from_curve(calibration_metrics, coeffs)
 
 def main():
     parser = argparse.ArgumentParser(

@@ -86,7 +86,7 @@ class FrameData:
         ]
         return cls(
             frame_number=frame_num,
-            timestamp=timestamp,
+            timestamp_s=timestamp,
             landmarks=landmarks,
             world_landmarks=world_landmarks
         )
