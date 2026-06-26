@@ -4,34 +4,16 @@ from matplotlib.dates import FR
 import numpy as np
 import pytest
 
-TEST_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-SRC_PATH = os.path.join(TEST_ROOT, "src")
-if SRC_PATH not in sys.path:
-    sys.path.insert(0, SRC_PATH)
-
 from dto.frame_data import Landmark, FrameData
 from types import SimpleNamespace
 from landmark_dicts import LANDMARK_INDICES
 
 np.random.seed(0)
 
-@pytest.fixture
-def make_landmarks():
-    """Factory fixture that yields a function to build 33 Landmark objects with optional overrides."""
-    def _factory(visibility=1.0, world_offset=(0.0, 0.0, 0.0)):
-        lms = []
-        for i in range(33):
-            x = float(i) + world_offset[0]
-            y = float(i % 5) + world_offset[1]
-            z = float(i % 3) + world_offset[2]
-            lms.append(Landmark(x=x, y=y, z=z, visibility=visibility, presence=1.0))
-        return lms
-    return _factory
-
 # tests the from_mediapipe class method of the Landmark class,
 # ensuring it correctly converts mediapipe landmarks to Landmark instances
 def test_from_mediapipe():
-    # Fake MediaPipe NormalizedLandmark
+    """from_mediapipe should correctly convert a mediapipe landmark to a Landmark instance."""
     mp_lm = SimpleNamespace(x=0.1, y=0.2, z=-0.5, visibility=0.9, presence=1.0)
     result = Landmark.from_mediapipe(mp_lm)
     assert result.x == 0.1
@@ -41,6 +23,7 @@ def test_from_mediapipe():
     assert result.presence == 1.0
 
 def test_get_landmark(make_landmarks):
+    """get_landmark should return the correct landmark for every index."""
     landmarks = make_landmarks()
     frame_data = FrameData(frame_number=0, timestamp_s=0.0, landmarks=landmarks, world_landmarks=landmarks)
     for i in range(33):
@@ -53,6 +36,7 @@ def test_get_landmark(make_landmarks):
         assert lm.presence == 1.0
 
 def test_get_landmark_by_name(make_landmarks):
+    """get_landmark_by_name should return the correct landmark for every known name."""
     landmarks = make_landmarks()
     frame_data = FrameData(frame_number=0, timestamp_s=0.0, landmarks=landmarks, world_landmarks=landmarks)
 
@@ -69,6 +53,7 @@ def test_get_landmark_by_name(make_landmarks):
         assert lm.presence == name_lm.presence
 
 def test_get_world_landmark(make_landmarks):
+    """get_world_landmark should return the correct world landmark for every index."""
     landmarks = make_landmarks(world_offset=(1.0, 2.0, 3.0))
     frame_data = FrameData(frame_number=0, timestamp_s=0.0, landmarks=landmarks, world_landmarks=landmarks)
     for i in range(33):

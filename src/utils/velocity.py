@@ -39,7 +39,10 @@ def derive_velocity(
                 pos_right, conf_right = frame.get_lm_xyzv_by_name(lm_key_2)
 
                 total = conf_left + conf_right
-                pos = (pos_left * conf_left + pos_right * conf_right) / total
+                if total > 0:
+                    pos = (pos_left * conf_left + pos_right * conf_right) / total
+                else:
+                    pos = np.full(3, np.nan)
 
             elif exercise.bilateral == "left" and conf_left > 0.7:
                 pos = pos_left
@@ -67,8 +70,9 @@ def derive_velocity(
                 positions[:, col] = col_vals
 
     # apply low pass filter to smooth the positions
+    cutoff_hz = min(6.0, fps * 0.4)
     nyq = 0.5 * fps
-    b, a = butter(4, 6 / nyq, btype='low', analog=False)
+    b, a = butter(4, cutoff_hz / nyq, btype='low', analog=False)
     for col in range(3):
         positions[:, col] = filtfilt(b, a, positions[:, col], axis=0)
 

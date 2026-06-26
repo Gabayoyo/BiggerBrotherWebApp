@@ -57,7 +57,7 @@ def sanitise_exercise_input(s: str) -> str:
 
     # must start with a letter
     if not s[0].isalpha():
-        return Exception("Invalid exercise name. Must start with a letter.")
+        raise ValueError("Invalid exercise name. Must start with a letter.")
 
     return s
 

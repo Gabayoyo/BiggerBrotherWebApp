@@ -33,7 +33,7 @@ class RepAnalysisResult:
     
     def console_output(self) -> str:
         return (
-            f"\n{self.summary_table(f'Analysis Results ({self.exercise})')}\n"
+            f"{self.summary_table(f'Analysis Results ({self.exercise})')}\n"
         )
 
 # returned by estimate_rir(). Contains target metrics + RiR estimate

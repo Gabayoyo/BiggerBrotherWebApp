@@ -4,13 +4,18 @@ import numpy as np
 
 # helper function that calculates the angle between three landmarks in 3D space
 def _calculate_angle(a: Landmark, b: Landmark, c: Landmark) -> float:
-    
     ba = a.to_array() - b.to_array()
     bc = c.to_array() - b.to_array()
 
-    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
-    cosine_angle = np.clip(cosine_angle, -1.0, 1.0)  # guard against floating point drift
+    norm_ba = np.linalg.norm(ba)
+    norm_bc = np.linalg.norm(bc)
 
+    # check for zero-length vectors to avoid division by zero
+    if norm_ba == 0.0 or norm_bc == 0.0:
+        raise ValueError("Cannot compute angle: one of the vectors has zero length.")
+
+    cosine_angle = np.dot(ba, bc) / (norm_ba * norm_bc)
+    cosine_angle = np.clip(cosine_angle, -1.0, 1.0)
     return np.degrees(np.arccos(cosine_angle))
 
 # main function to derive angles from exercise/frame data
