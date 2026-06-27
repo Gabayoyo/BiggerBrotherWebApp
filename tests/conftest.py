@@ -7,9 +7,8 @@ SRC_PATH = os.path.join(TEST_ROOT, "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-
-import numpy as np
 from dto.frame_data import Landmark
+from dto.rep_metric import RepMetric
 
 @pytest.fixture(scope="function")
 def make_landmarks():
@@ -25,4 +24,28 @@ def make_landmarks():
             z = float(i % 3) + world_offset[2]
             lms.append(Landmark(x=x, y=y, z=z, visibility=visibility, presence=1.0))
         return lms
+    return _factory
+
+@pytest.fixture(scope="function")
+def make_metrics():
+    """Quick factory for RepMetric instances."""
+
+    def _factory(speeds: list, rom_degrees=90, con_dur=0.5, rep_dur=1.0):
+        metrics = []
+        for i, spd in enumerate(speeds, start=1):
+            metrics.append(
+                RepMetric(
+                    rep_number=i,
+                    ecc_start_frame=i * 100,
+                    ecc_end_frame=i * 100 + 40,
+                    con_start_frame=i * 100 + 41,
+                    con_end_frame=i * 100 + 80,
+                    rom_start=0,
+                    rom_degrees=rom_degrees,
+                    con_duration_s=con_dur,
+                    rep_duration_s=rep_dur,
+                    mean_concentric_speed_ms=spd,
+                )
+            )
+        return metrics
     return _factory

@@ -13,8 +13,8 @@ def compute_reps(
 
     values = [a for a in angles if a is not None]
     frames = list(range(len(values)))
+    last_frame = frames[-1] if frames else 0   # fallback, but frames is never empty here
 
-    # gets peaks and troughs here
     peaks, _   = find_peaks( values, prominence=prominence)
     troughs, _ = find_peaks([-v for v in values], prominence=prominence)
 
@@ -27,7 +27,7 @@ def compute_reps(
     if not extrema:
         return []
 
-    # merge consecutive same-type extrema, keeping the more extreme value
+    # merge consecutive same-type extrema
     cleaned = [extrema[0]]
     for curr in extrema[1:]:
         prev = cleaned[-1]
@@ -55,29 +55,23 @@ def compute_reps(
                 None,
             )
 
-            # save bottom ROM for data representation later
             rom_start = pending_trough[1]
             rom = round(peak_val)
 
             if is_flexion:
-                # flexion exercise (bicep curl, leg curl, etc.)
-                # concentric = (angle decreasing)
                 con_start = peak_frame
-                con_end   = next_trough[0] if next_trough else None
-                # eccentric = (angle increasing)
+                con_end   = next_trough[0] if next_trough else frames[-1]   # was: else None
                 ecc_start = pending_trough[0]
                 ecc_end   = peak_frame
-            else:
-                # extension exercise (tricep pushdown, leg extension, etc.)
-                # concentric = (angle increasing)
+            else:  # extension
                 con_start = pending_trough[0]
                 con_end   = peak_frame
-                # eccentric = (angle decreasing)
                 ecc_start = peak_frame
-                ecc_end   = next_trough[0] if next_trough else None
+                ecc_end   = next_trough[0] if next_trough else frames[-1]   # was: else None
 
+            # durations
             con_sec = (con_end - con_start) / fps
-            ecc_sec = ((ecc_end - ecc_start) / fps) if ecc_start is not None and ecc_end is not None else 0.0
+            ecc_sec = (ecc_end - ecc_start) / fps if ecc_end is not None else 0.0
 
             metric = RepMetric(
                 rep_number=rep_number,

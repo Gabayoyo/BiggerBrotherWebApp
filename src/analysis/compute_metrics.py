@@ -5,7 +5,7 @@ from utils.velocity import derive_velocity
 from dto.frame_data import FrameData
 from dto.results import RepMetric
 from analysis.visualiser import animate_skeleton
-from analysis.compute_rep import compute_reps
+from analysis.compute_reps import compute_reps
 from utils.angle import derive_angles
 from utils.utils import smooth_floats
 from dto.exercise import get_exercise
