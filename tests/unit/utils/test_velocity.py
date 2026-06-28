@@ -1,15 +1,14 @@
-import sys
-import os
 import math
+
 import numpy as np
-import pytest
+
+from dto.exercise import Exercise
+from dto.frame_data import FrameData, Landmark
+from landmark_dicts import LANDMARK_INDICES, LANDMARK_OF_INTEREST
+from utils.velocity import derive_velocity
 
 np.random.seed(0)
 
-from dto.frame_data import Landmark, FrameData
-from dto.exercise import exercise
-from landmark_dicts import LANDMARK_OF_INTEREST, LANDMARK_INDICES
-from utils.velocity import derive_velocity
 
 def make_velocity_frames(
     exercise_name: str,
@@ -69,7 +68,7 @@ def make_exercise(name, bilateral, frames, is_flexion=True):
     if bilateral != "bilateral":
         side = 0 if bilateral == "left" else 1
         limbs = [limbs[side]]
-    return exercise(
+    return Exercise(
         name=name,
         limbs=limbs,
         bilateral=bilateral,

@@ -1,9 +1,20 @@
 import pytest
-from dto.rep_metric import RepMetric
+
 from analysis.compute_reps import compute_reps
+from dto.rep_metric import RepMetric
 
 
-def _rep_metric(rep_number, con_start, con_end, ecc_start, ecc_end, rom_start, rom_deg, rep_dur, con_dur):
+def _rep_metric(
+    rep_number,
+    con_start,
+    con_end,
+    ecc_start,
+    ecc_end,
+    rom_start,
+    rom_deg,
+    rep_dur,
+    con_dur,
+):
     """Create a RepMetric with given durations and frame indices, speed=None."""
     return RepMetric(
         rep_number=rep_number,
@@ -30,7 +41,7 @@ class TestComputeRepsFlexion:
         ]
         reps = compute_reps(angles, fps, is_flexion=True, prominence=30)
         assert len(reps) == len(expected)
-        for r, e in zip(reps, expected):
+        for r, e in zip(reps, expected, strict=True):
             assert r.rep_number == e.rep_number
             assert r.con_start_frame == e.con_start_frame
             assert r.con_end_frame == e.con_end_frame
@@ -91,7 +102,7 @@ class TestComputeRepsExtension:
         ]
         reps = compute_reps(angles, fps, is_flexion=False, prominence=30)
         assert len(reps) == len(expected)
-        for r, e in zip(reps, expected):
+        for r, e in zip(reps, expected, strict=True):
             assert r.rep_number == e.rep_number
             assert r.con_start_frame == e.con_start_frame
             assert r.con_end_frame == e.con_end_frame
@@ -140,7 +151,7 @@ class TestEdgeCases:
     def test_missing_next_trough_flexion(self):
         """When no trough follows the last peak, the concentric phase ends at the last frame."""
         # Peak at index 3 (value 140), then drops to 120 – no trough after.
-        angles = [60, 80, 100, 140, 120]   # fps=10
+        angles = [60, 80, 100, 140, 120]  # fps=10
         reps = compute_reps(angles, 10, is_flexion=True, prominence=10)
         assert len(reps) == 1
         # Last frame index is 4, and con_end should be that frame.
@@ -155,13 +166,13 @@ class TestEdgeCases:
     def test_missing_next_trough_extension(self):
         """Extension: when no trough follows the last peak, eccentric phase ends at the last frame."""
         # Peak at index 3 (value 150), then drops to 140 – no trough after.
-        angles = [50, 70, 90, 150, 140]   # fps=10
+        angles = [50, 70, 90, 150, 140]  # fps=10
         reps = compute_reps(angles, 10, is_flexion=False, prominence=10)
         assert len(reps) == 1
         # Last frame index is 4
-        assert reps[0].con_start_frame == 0      # trough → peak
+        assert reps[0].con_start_frame == 0  # trough → peak
         assert reps[0].con_end_frame == 3
         assert reps[0].ecc_start_frame == 3
-        assert reps[0].ecc_end_frame == 4        # fallback to last frame
+        assert reps[0].ecc_end_frame == 4  # fallback to last frame
         # Eccentric duration (4 - 3) / 10 = 0.1
         assert reps[0].rep_duration_s - reps[0].con_duration_s == pytest.approx(0.1)

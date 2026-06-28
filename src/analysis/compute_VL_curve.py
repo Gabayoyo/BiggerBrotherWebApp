@@ -1,17 +1,24 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from dto.rep_metric import RepMetric
 
-def compute_VL_curve(prev_metrics: list[RepMetric], visualise_curve: bool = False) -> np.poly1d:
- 
-    velocities = [m.mean_concentric_speed_ms for m in prev_metrics if m.mean_concentric_speed_ms is not None]
+
+def compute_vl_curve(
+    prev_metrics: list[RepMetric], visualise_curve: bool = False
+) -> np.poly1d:
+
+    velocities = [
+        m.mean_concentric_speed_ms
+        for m in prev_metrics
+        if m.mean_concentric_speed_ms is not None
+    ]
 
     v = np.asarray(velocities, dtype=float)
     n = len(v)
     if n < 3:
         raise ValueError(f"Set has only {n} rep(s); need at least 3.")
- 
+
     peak_idx = int(np.argmax(v))  # 0-based index of the fastest rep
     peak_position_pct = (peak_idx + 1) / n * 100.0
 
@@ -24,7 +31,7 @@ def compute_VL_curve(prev_metrics: list[RepMetric], visualise_curve: bool = Fals
             f"{n - peak_idx} post-peak rep(s) remain, too few to "
             f"characterize a fatigue trend."
         )
- 
+
     # Keep only the peak rep onward - the genuine fatigue trajectory.
     # Rep numbering for rep_pct stays anchored to the set's true total;
     # only the training pairs themselves are trimmed.
@@ -38,12 +45,12 @@ def compute_VL_curve(prev_metrics: list[RepMetric], visualise_curve: bool = Fals
 
     if visualise_curve:
         plt.figure(figsize=(6, 5))
-        plt.scatter(vl_pct, rep_pct, color='black', label='Calibration reps')
+        plt.scatter(vl_pct, rep_pct, color="black", label="Calibration reps")
         x_smooth = np.linspace(vl_pct.min(), vl_pct.max(), 100)
-        plt.plot(x_smooth, np.poly1d(coeffs)(x_smooth), 'r-', label='Fitted VL curve')
-        plt.xlabel('Velocity Loss (%)')
-        plt.ylabel('Repetitions Completed (%)')
-        plt.title('VL–%Repetitions Relationship')
+        plt.plot(x_smooth, np.poly1d(coeffs)(x_smooth), "r-", label="Fitted VL curve")
+        plt.xlabel("Velocity Loss (%)")
+        plt.ylabel("Repetitions Completed (%)")
+        plt.title("VL–%Repetitions Relationship")
         plt.legend()
         plt.grid(True)
         plt.tight_layout()

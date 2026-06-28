@@ -1,18 +1,18 @@
-import sys
-import os
 import math
+
 import numpy as np
 import pytest
 
-np.random.seed(0)
-
-from dto.frame_data import Landmark, FrameData
+from dto.frame_data import FrameData, Landmark
 from utils.utils import (
-    smooth_floats,
-    smooth_landmark_trajectory,
     sanitise_exercise_input,
     sanitise_unilateral_input,
+    smooth_floats,
+    smooth_landmark_trajectory,
 )
+
+np.random.seed(0)
+
 
 def make_frame_data_list(positions, landmark_index=0):
     """Create a list of FrameData objects where the given landmark_index
@@ -25,6 +25,7 @@ def make_frame_data_list(positions, landmark_index=0):
         )
         frames.append(FrameData(0, 0.0, landmarks, landmarks))
     return frames
+
 
 def test_smooth_floats_basic():
     """A clean signal is smoothed without NaNs."""
@@ -58,7 +59,9 @@ def test_smooth_floats_all_nans():
 def test_smooth_floats_window_too_large():
     """Window length must not exceed signal length."""
     signal = np.array([1.0, 2.0, 3.0])
-    with pytest.raises(ValueError, match="window_length must be less than or equal to the size of x"):
+    with pytest.raises(
+        ValueError, match="window_length must be less than or equal to the size of x"
+    ):
         smooth_floats(signal, window_size=5)
 
 
@@ -71,6 +74,7 @@ def test_smooth_floats_even_window():
     # Should run without raising an exception
     out = smooth_floats(signal, window_size=4)
     assert len(out) == len(signal)
+
 
 def test_smooth_landmark_trajectory_constant():
     """Constant positions stay constant after smoothing."""
@@ -102,6 +106,7 @@ def test_smooth_landmark_trajectory_bad_index():
     frames = make_frame_data_list(np.zeros((3, 3)), 0)
     with pytest.raises(IndexError):
         smooth_landmark_trajectory(frames, 100)  # out of range
+
 
 def test_sanitise_exercise_basic():
     assert sanitise_exercise_input("bicep_curl") == "bicep_curl"
@@ -143,6 +148,7 @@ def test_sanitise_exercise_multiple_spaces():
 def test_sanitise_exercise_leading_trailing_underscores_removed():
     # Ensure underscores are stripped after substitution
     assert sanitise_exercise_input("__bench_press__") == "bench_press"
+
 
 def test_sanitise_unilateral_valid():
     assert sanitise_unilateral_input("left") == "left"

@@ -2,6 +2,7 @@ from scipy.signal import find_peaks
 
 from dto.rep_metric import RepMetric
 
+
 # computes reps from a list of angles
 # uses peak/trough detection to find reps
 def compute_reps(
@@ -13,15 +14,13 @@ def compute_reps(
 
     values = [a for a in angles if a is not None]
     frames = list(range(len(values)))
-    last_frame = frames[-1] if frames else 0   # fallback, but frames is never empty here
 
-    peaks, _   = find_peaks( values, prominence=prominence)
+    peaks, _ = find_peaks(values, prominence=prominence)
     troughs, _ = find_peaks([-v for v in values], prominence=prominence)
 
-    extrema = (
-        [(frames[i], values[i], "peak")   for i in peaks] +
-        [(frames[i], values[i], "trough") for i in troughs]
-    )
+    extrema = [(frames[i], values[i], "peak") for i in peaks] + [
+        (frames[i], values[i], "trough") for i in troughs
+    ]
     extrema.sort(key=lambda x: x[0])
 
     if not extrema:
@@ -51,7 +50,11 @@ def compute_reps(
             peak_frame, peak_val = e[0], e[1]
 
             next_trough = next(
-                (cleaned[j] for j in range(i + 1, len(cleaned)) if cleaned[j][2] == "trough"),
+                (
+                    cleaned[j]
+                    for j in range(i + 1, len(cleaned))
+                    if cleaned[j][2] == "trough"
+                ),
                 None,
             )
 
@@ -60,14 +63,18 @@ def compute_reps(
 
             if is_flexion:
                 con_start = peak_frame
-                con_end   = next_trough[0] if next_trough else frames[-1]   # was: else None
+                con_end = (
+                    next_trough[0] if next_trough else frames[-1]
+                )  # was: else None
                 ecc_start = pending_trough[0]
-                ecc_end   = peak_frame
+                ecc_end = peak_frame
             else:  # extension
                 con_start = pending_trough[0]
-                con_end   = peak_frame
+                con_end = peak_frame
                 ecc_start = peak_frame
-                ecc_end   = next_trough[0] if next_trough else frames[-1]   # was: else None
+                ecc_end = (
+                    next_trough[0] if next_trough else frames[-1]
+                )  # was: else None
 
             # durations
             con_sec = (con_end - con_start) / fps
@@ -83,7 +90,7 @@ def compute_reps(
                 rom_degrees=rom,
                 rep_duration_s=round(con_sec + ecc_sec, 3),
                 con_duration_s=round(con_sec, 3),
-                mean_concentric_speed_ms=None
+                mean_concentric_speed_ms=None,
             )
 
             rep_number += 1

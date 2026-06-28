@@ -1,36 +1,61 @@
 import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter
-from matplotlib.animation import FuncAnimation
 import numpy as np
+from matplotlib.animation import FuncAnimation
+from scipy.signal import savgol_filter
 
 # MediaPipe pose connections (landmark index pairs)
 POSE_CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 7),
-    (0, 4), (4, 5), (5, 6), (6, 8),
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 7),
+    (0, 4),
+    (4, 5),
+    (5, 6),
+    (6, 8),
     (9, 10),
     (11, 12),
-    (11, 13), (13, 15), (15, 17), (17, 19), (19, 15), (15, 21),
-    (12, 14), (14, 16), (16, 18), (18, 20), (20, 16), (16, 22),
-    (11, 23), (12, 24), (23, 24),
-    (23, 25), (25, 27), (27, 29), (29, 31), (27, 31),
-    (24, 26), (26, 28), (28, 30), (30, 32), (28, 32),
+    (11, 13),
+    (13, 15),
+    (15, 17),
+    (17, 19),
+    (19, 15),
+    (15, 21),
+    (12, 14),
+    (14, 16),
+    (16, 18),
+    (18, 20),
+    (20, 16),
+    (16, 22),
+    (11, 23),
+    (12, 24),
+    (23, 24),
+    (23, 25),
+    (25, 27),
+    (27, 29),
+    (29, 31),
+    (27, 31),
+    (24, 26),
+    (26, 28),
+    (28, 30),
+    (30, 32),
+    (28, 32),
 ]
+
 
 def animate_skeleton(frame_data_list, save_path=None, fps=30):
     fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection="3d")
 
     # Precompute all keypoints (frames x landmarks x 3)
-    all_points = np.array([
-        [lm.to_array() for lm in fd.world_landmarks]
-        for fd in frame_data_list
-    ])   # shape (n_frames, 33, 3)
+    all_points = np.array(
+        [[lm.to_array() for lm in fd.world_landmarks] for fd in frame_data_list]
+    )  # shape (n_frames, 33, 3)
 
     # Precompute visibility (frames x landmarks)
-    all_visibility = np.array([
-        [lm.visibility for lm in fd.world_landmarks]
-        for fd in frame_data_list
-    ])   # shape (n_frames, 33)
+    all_visibility = np.array(
+        [[lm.visibility for lm in fd.world_landmarks] for fd in frame_data_list]
+    )  # shape (n_frames, 33)
 
     n_frames, n_landmarks, n_dims = all_points.shape
 
@@ -52,9 +77,7 @@ def animate_skeleton(frame_data_list, save_path=None, fps=30):
             if nan_mask.any():
                 valid = ~nan_mask
                 series[nan_mask] = np.interp(
-                    np.flatnonzero(nan_mask),
-                    np.flatnonzero(valid),
-                    series[valid]
+                    np.flatnonzero(nan_mask), np.flatnonzero(valid), series[valid]
                 )
                 all_points[:, lm, d] = series
 
@@ -68,18 +91,18 @@ def animate_skeleton(frame_data_list, save_path=None, fps=30):
     y_min, y_max = all_coords[:, 1].min() - margin, all_coords[:, 1].max() + margin
     z_min, z_max = all_coords[:, 2].min() - margin, all_coords[:, 2].max() + margin
 
-    scatter = ax.scatter([], [], [], c='red', s=20)
-    lines = [ax.plot([], [], [], 'b-')[0] for _ in POSE_CONNECTIONS]
+    scatter = ax.scatter([], [], [], c="red", s=20)
+    lines = [ax.plot([], [], [], "b-")[0] for _ in POSE_CONNECTIONS]
     title = ax.set_title("")
 
     def init():
         ax.set_xlim(-x_max, -x_min)
-        ax.set_ylim(z_min, z_max)   # swap y/z for more natural "depth" view
-        ax.set_zlim(-y_max, -y_min) # invert y since image coords go down
+        ax.set_ylim(z_min, z_max)  # swap y/z for more natural "depth" view
+        ax.set_zlim(-y_max, -y_min)  # invert y since image coords go down
         ax.view_init(elev=0, azim=-75)
-        ax.set_xlabel('X')
-        ax.set_ylabel('Z')
-        ax.set_zlabel('Y')
+        ax.set_xlabel("X")
+        ax.set_ylabel("Z")
+        ax.set_zlabel("Y")
         scatter._offsets3d = ([], [], [])
         for line in lines:
             line.set_data([], [])
@@ -93,7 +116,7 @@ def animate_skeleton(frame_data_list, save_path=None, fps=30):
         # --- Hide landmarks that are missing (all zeros or NaN) ---
         valid = np.isfinite(xs) & np.isfinite(ys) & np.isfinite(zs)
         is_zero = (xs == 0) & (ys == 0) & (zs == 0)
-        valid = valid & ~is_zero          # True → draw the point
+        valid = valid & ~is_zero  # True → draw the point
 
         # Build masked coordinates for the scatter plot.
         # Using NaN makes matplotlib skip the point entirely.
@@ -105,7 +128,7 @@ def animate_skeleton(frame_data_list, save_path=None, fps=30):
         scatter._offsets3d = (xs_plot, zs_plot, -ys_plot)
 
         # --- Hide lines whose endpoints are missing ---
-        for line, (i, j) in zip(lines, POSE_CONNECTIONS):
+        for line, (i, j) in zip(lines, POSE_CONNECTIONS, strict=True):
             if valid[i] and valid[j]:
                 line.set_data([xs[i], xs[j]], [zs[i], zs[j]])
                 line.set_3d_properties([-ys[i], -ys[j]])
@@ -120,8 +143,12 @@ def animate_skeleton(frame_data_list, save_path=None, fps=30):
         return [scatter, *lines, title]
 
     anim = FuncAnimation(
-        fig, update, frames=len(frame_data_list),
-        init_func=init, interval=1000 / fps, blit=False
+        fig,
+        update,
+        frames=len(frame_data_list),
+        init_func=init,
+        interval=1000 / fps,
+        blit=False,
     )
 
     if save_path:

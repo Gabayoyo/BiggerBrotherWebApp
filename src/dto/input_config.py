@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from utils.utils import sanitise_exercise_input, sanitise_unilateral_input
 
+
 @dataclass
 class InputConfig:
     exercise: str

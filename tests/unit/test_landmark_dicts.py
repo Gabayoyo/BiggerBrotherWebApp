@@ -1,14 +1,13 @@
-import sys
-import os
 import pytest
 
 from landmark_dicts import (
-    get_landmark_indices_from_angle,
-    get_landmark_indices_from_exercise,
-    LANDMARK_INDICES,
     ANGLE,
     ANGLES_OF_INTEREST,
+    LANDMARK_INDICES,
+    get_landmark_indices_from_angle,
+    get_landmark_indices_from_exercise,
 )
+
 
 def test_get_landmark_indices_from_angle_valid():
     """Valid angle names return correct 3-tuple of indices."""
@@ -52,6 +51,7 @@ def test_get_landmark_indices_from_angle_invalid():
     with pytest.raises(ValueError, match="not defined in ANGLE"):
         get_landmark_indices_from_angle("")
 
+
 def test_get_landmark_indices_from_exercise_valid():
     """Valid exercises return list of angle tuples."""
     tricep = get_landmark_indices_from_exercise("tricep_extension")
@@ -91,15 +91,20 @@ def test_get_landmark_indices_from_exercise_invalid():
     with pytest.raises(ValueError, match="not defined in ANGLES_OF_INTEREST"):
         get_landmark_indices_from_exercise("BICEP_CURL")  # exact string, case-sensitive
 
+
 def test_exercise_angles_exist_in_angle_dict():
     """Every angle referenced by an exercise must exist in ANGLE."""
     for ex_name, angle_names in ANGLES_OF_INTEREST.items():
         for angle_name in angle_names:
-            assert angle_name in ANGLE, f"{angle_name} used by {ex_name} but not in ANGLE"
+            assert angle_name in ANGLE, (
+                f"{angle_name} used by {ex_name} but not in ANGLE"
+            )
 
 
 def test_angle_landmark_names_exist_in_indices():
     """Every landmark name used in ANGLE must exist in LANDMARK_INDICES."""
     for angle_name, landmark_names in ANGLE.items():
         for lm_name in landmark_names:
-            assert lm_name in LANDMARK_INDICES, f"{lm_name} in {angle_name} missing from LANDMARK_INDICES"
+            assert lm_name in LANDMARK_INDICES, (
+                f"{lm_name} in {angle_name} missing from LANDMARK_INDICES"
+            )

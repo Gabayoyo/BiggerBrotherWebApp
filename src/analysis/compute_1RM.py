@@ -1,9 +1,10 @@
 import math
 
-def compute_1RM(weight: float, reps: int) -> float:
+
+def compute_1rm(weight: float, reps: int) -> float:
     """
-    Calculate one‑rep max (1RM) using the formula:
-        1RM = weight * (1 + (reps - 1) ** 0.85 / (-2.55 + 4.58 * ln(weight)))
+    Calculate one‑rep max (1rm) using the formula:
+        1rm = weight * (1 + (reps - 1) ** 0.85 / (-2.55 + 4.58 * ln(weight)))
 
     Parameters
     ----------

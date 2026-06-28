@@ -1,31 +1,32 @@
-import sys
-import os
 import numpy as np
 import pytest
 
-np.random.seed(0)
-
-from dto.exercise import exercise, get_exercise
-from dto.frame_data import FrameData, Landmark
+from dto.exercise import Exercise, get_exercise
+from dto.frame_data import FrameData
 from landmark_dicts import get_landmark_indices_from_exercise
+
+np.random.seed(0)
 
 
 @pytest.fixture
 def frame_data_list(make_landmarks):
     """Returns a list containing one FrameData for convenience."""
     lms = make_landmarks()
-    return [FrameData(frame_number=0, timestamp_s=0.0, landmarks=lms, world_landmarks=lms)] 
+    return [
+        FrameData(frame_number=0, timestamp_s=0.0, landmarks=lms, world_landmarks=lms)
+    ]
+
 
 def test_exercise_direct_creation():
     """An exercise instance stores attributes exactly as given."""
     # Simple limb tuple (left arm only for a mock exercise)
     limbs = [(11, 13, 15)]
-    ex = exercise(
+    ex = Exercise(
         name="test_exercise",
         limbs=limbs,
         bilateral="left",
         is_flexion=True,
-        frame_data=None
+        frame_data=None,
     )
     assert ex.name == "test_exercise"
     assert ex.limbs == limbs
@@ -36,15 +37,16 @@ def test_exercise_direct_creation():
 
 def test_exercise_with_frame_data(frame_data_list):
     """The frame_data list is stored as provided."""
-    ex = exercise(
+    ex = Exercise(
         name="bicep_curl",
         limbs=[(11, 13, 15), (12, 14, 16)],
         bilateral="bilateral",
         is_flexion=True,
-        frame_data=frame_data_list
+        frame_data=frame_data_list,
     )
     assert ex.frame_data is frame_data_list
     assert len(ex.frame_data) == 1
+
 
 def test_get_exercise_bilateral_bicep_curl(frame_data_list):
     """Bilateral bicep_curl returns both limb tuples and correct flags."""
@@ -58,7 +60,7 @@ def test_get_exercise_bilateral_bicep_curl(frame_data_list):
     # limbs should be a list of two tuples (left + right arm)
     expected_limbs = get_landmark_indices_from_exercise("bicep_curl")
     assert len(expected_limbs) == 2
-    assert ex.limbs == expected_limbs   # exactly as returned
+    assert ex.limbs == expected_limbs  # exactly as returned
 
 
 def test_get_exercise_left_bicep_curl(frame_data_list):
@@ -69,7 +71,7 @@ def test_get_exercise_left_bicep_curl(frame_data_list):
     # limbs must contain exactly one tuple, and it must be the first of the original pair
     full_limbs = get_landmark_indices_from_exercise("bicep_curl")
     assert len(ex.limbs) == 1
-    assert ex.limbs[0] == full_limbs[0]   # left side is index 0
+    assert ex.limbs[0] == full_limbs[0]  # left side is index 0
 
 
 def test_get_exercise_right_bicep_curl(frame_data_list):
@@ -79,7 +81,7 @@ def test_get_exercise_right_bicep_curl(frame_data_list):
     assert ex.bilateral == "right"
     full_limbs = get_landmark_indices_from_exercise("bicep_curl")
     assert len(ex.limbs) == 1
-    assert ex.limbs[0] == full_limbs[1]   # right side is index 1
+    assert ex.limbs[0] == full_limbs[1]  # right side is index 1
 
 
 def test_get_exercise_tricep_extension(frame_data_list):
@@ -106,7 +108,7 @@ def test_get_exercise_unilateral_not_possible(frame_data_list):
     original = _EXERCISE_CONFIGS.copy()
     _EXERCISE_CONFIGS["test_only_bilateral"] = {
         "uni_possible": False,
-        "is_flexion": True
+        "is_flexion": True,
     }
     try:
         with pytest.raises(ValueError):
@@ -127,7 +129,7 @@ def test_get_exercise_unilateral_not_possible_with_mock(frame_data_list, monkeyp
     _EXERCISE_CONFIGS["test_uni"] = {"uni_possible": False, "is_flexion": True}
     monkeypatch.setattr(
         "dto.exercise.get_landmark_indices_from_exercise",
-        lambda name: [(0, 1, 2), (3, 4, 5)]
+        lambda name: [(0, 1, 2), (3, 4, 5)],
     )
 
     with pytest.raises(ValueError, match="cannot be performed unilaterally"):
@@ -137,7 +139,9 @@ def test_get_exercise_unilateral_not_possible_with_mock(frame_data_list, monkeyp
     del _EXERCISE_CONFIGS["test_uni"]
 
 
-def test_get_exercise_bilateral_does_not_trigger_unilateral_check(frame_data_list, monkeypatch):
+def test_get_exercise_bilateral_does_not_trigger_unilateral_check(
+    frame_data_list, monkeypatch
+):
     """
     Even if uni_possible=False, using 'bilateral' should work.
     """
@@ -146,7 +150,7 @@ def test_get_exercise_bilateral_does_not_trigger_unilateral_check(frame_data_lis
     _EXERCISE_CONFIGS["test_bilat_only"] = {"uni_possible": False, "is_flexion": False}
     monkeypatch.setattr(
         "dto.exercise.get_landmark_indices_from_exercise",
-        lambda name: [(0, 1, 2), (3, 4, 5)]
+        lambda name: [(0, 1, 2), (3, 4, 5)],
     )
 
     # This should NOT raise

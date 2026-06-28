@@ -1,12 +1,13 @@
 import numpy as np
 from scipy.signal import butter, filtfilt
-from dto.exercise import exercise
-from dto.rep_metric import RepMetric
+
+from dto.exercise import Exercise
 from landmark_dicts import LANDMARK_OF_INTEREST
+
 
 # main function to derive velocity from frame data
 def derive_velocity(
-    exercise: exercise,
+    exercise: Exercise,
     fps: float,
 ):
     n_frames = len(exercise.frame_data)
@@ -19,15 +20,11 @@ def derive_velocity(
     # iterate every frame, get frame's xyz position, average it if bilateral
     # then apply a low-pass filter, then compute velocity using central differences
     for frame in exercise.frame_data:
-
         # if just right side, use right landmark (always index 1 for LANDMARK_OF_INTEREST)
         if exercise.bilateral == "right":
             lm_key_1 = LANDMARK_OF_INTEREST[exercise.name][1]
             pos_right, conf_right = frame.get_lm_xyzv_by_name(lm_key_1)
-            if conf_right > 0.7:
-                pos = pos_right
-            else:
-                pos = np.full(3, np.nan)
+            pos = pos_right if conf_right > 0.7 else np.full(3, np.nan)
         else:
             # else at the very least is left
             lm_key_1 = LANDMARK_OF_INTEREST[exercise.name][0]
@@ -72,7 +69,7 @@ def derive_velocity(
     # apply low pass filter to smooth the positions
     cutoff_hz = min(6.0, fps * 0.4)
     nyq = 0.5 * fps
-    b, a = butter(4, cutoff_hz / nyq, btype='low', analog=False)
+    b, a = butter(4, cutoff_hz / nyq, btype="low", analog=False)
     for col in range(3):
         positions[:, col] = filtfilt(b, a, positions[:, col], axis=0)
 

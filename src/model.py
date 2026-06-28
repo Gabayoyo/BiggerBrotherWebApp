@@ -7,8 +7,9 @@ MODEL_URL = (
     "pose_landmarker_full.task"
 )
 DEFAULT_MODEL_PATH = Path("models/pose_landmarker_full.task")
- 
- # download the pose landmarker if it isn't already present
+
+
+# download the pose landmarker if it isn't already present
 def ensure_model(model_path: Path = DEFAULT_MODEL_PATH) -> Path:
     model_path.parent.mkdir(parents=True, exist_ok=True)
     if not model_path.exists():
