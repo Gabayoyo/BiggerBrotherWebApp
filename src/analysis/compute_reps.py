@@ -1,4 +1,3 @@
-from typing import Optional
 
 from scipy.signal import find_peaks
 
@@ -39,9 +38,9 @@ def compute_reps(
                 cleaned[-1] = curr if curr[1] < prev[1] else prev
         else:
             cleaned.append(curr)
-    
+
     results: list[RepMetric] = []
-    pending_trough: Optional[tuple[int, float, str]] = (frames[0], values[0], "trough")
+    pending_trough: tuple[int, float, str] | None = (frames[0], values[0], "trough")
     rep_number = 1
 
     for i, e in enumerate(cleaned):

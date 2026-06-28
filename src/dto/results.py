@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from pathlib import Path
+
 from tabulate import tabulate
-from typing import Optional
 
 from dto.rep_metric import RepMetric
 
-def _summary_table( title: str, metrics: list[RepMetric], estimated_1rm: Optional[float] = None) -> str:
+
+def _summary_table( title: str, metrics: list[RepMetric], estimated_1rm: float | None = None) -> str:
         headers = [
             "Rep",
             "ROM°",
@@ -43,7 +44,7 @@ class RepAnalysisResult:
     # may want a more complex field type here if we want to include metadata about the exercise/video
     exercise: str
     metrics: list[RepMetric]
-    estimated_1rm: Optional[float] = None
+    estimated_1rm: float | None = None
 
     # returns a string table representation of the analysis result for console output.
     def summary_table(self, title: str = "Analysis Results") -> str:
@@ -88,7 +89,7 @@ class RirAnalysisResult:
     rir_estimate: int
     # rir_rationale: str
     failure_metrics: list[RepMetric] | None = None
-    estimated_1rm: Optional[float] = None
+    estimated_1rm: float | None = None
 
     def summary_table(self) -> str:
         base = _summary_table(

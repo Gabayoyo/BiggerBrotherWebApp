@@ -1,6 +1,5 @@
 import argparse
 from pathlib import Path
-from typing import Optional
 
 from analysis.compute_1rm import compute_1rm
 from analysis.compute_metrics import compute_metrics
@@ -18,7 +17,7 @@ CACHE_DIR = Path("./cache")
 # def run() purely for CLI usage
 # doubles as a service class with exposed methods for streamlit or library imports
 class BiggerBrother:
-    def __init__(self, cache_dir: Optional[Path] = None, cache_data: bool = False):
+    def __init__(self, cache_dir: Path | None = None, cache_data: bool = False):
         self.model_path = ensure_model()
         self.cache_dir = cache_dir or CACHE_DIR
         self.cache_data = cache_data

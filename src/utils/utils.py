@@ -1,10 +1,10 @@
 import re
 import unicodedata
+from typing import cast
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.signal import savgol_filter
-from typing import cast
 
 from dto.frame_data import FrameData
 

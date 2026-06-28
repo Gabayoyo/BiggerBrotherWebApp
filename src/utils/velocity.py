@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.signal import butter, filtfilt
 from numpy.typing import NDArray
+from scipy.signal import butter, filtfilt
 
 from dto.exercise import Exercise
 from landmark_dicts import LANDMARK_OF_INTEREST
