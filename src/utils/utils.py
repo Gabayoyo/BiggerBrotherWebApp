@@ -2,13 +2,15 @@ import re
 import unicodedata
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.signal import savgol_filter
+from typing import cast
 
 from dto.frame_data import FrameData
 
 
 # used to smooth a 1D array of floats, e.g. angles, using a Savitzky-Golay filter
-def smooth_floats(signal: np.array, window_size: int = 5) -> list[float]:
+def smooth_floats(signal: NDArray[np.float64], window_size: int = 5) -> list[float]:
 
     signal = signal.copy().astype(float)
 
@@ -21,8 +23,8 @@ def smooth_floats(signal: np.array, window_size: int = 5) -> list[float]:
             x[np.isnan(signal)], x[not_nan], signal[not_nan]
         )
 
-    smoothed = savgol_filter(signal, window_length=window_size, polyorder=2)
-    return smoothed.tolist()
+    smoothed: NDArray[np.float64] = savgol_filter(signal, window_length=window_size, polyorder=2)
+    return cast(list[float], smoothed.tolist())
 
 
 # used to smooth the trajectory of a single landmark's xyz position over time
@@ -32,13 +34,11 @@ def smooth_landmark_trajectory(
     landmark_index: int,
     window: int = 5,
     polyorder: int = 2,
-) -> np.ndarray:
+) -> NDArray[np.float64]:
     positions = np.array(
         [f.get_landmark(landmark_index).to_array() for f in frame_data]
     )
-
-    # apply smoothing along time axis (axis=0)
-    smoothed = savgol_filter(
+    smoothed: NDArray[np.float64] = savgol_filter(
         positions, window_length=window, polyorder=polyorder, axis=0
     )
     return smoothed

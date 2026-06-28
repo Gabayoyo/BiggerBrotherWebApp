@@ -1,0 +1,122 @@
+# pyproject.toml — single configuration file for Python tooling and packaging
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+
+# --- Build system -----------------------------------------------------------
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# --- Project metadata -------------------------------------------------------
+[project]
+name = "BiggerBrother"
+version = "0.1.0"
+description = "Computer vision-derived feedback/metrics and RiR estimation for gym training analysis"
+readme = "README.md"
+license = { text = "MIT" }                         
+requires-python = ">=3.11"
+authors = [
+    { name = "Aaron Gabayoyo", email = "aarongaba05@gmail.com" }
+]
+keywords = ["computer-vision", "sports-science", "failure-prediction", "pose-estimation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "opencv-python>=4.10",
+    "numpy>=1.26",
+    "mediapipe>=0.10.14",
+    "ipywidgets>=8",
+    "pandas>=2",
+    "scipy>=1.14",
+    "tabulate>=0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest>=8",
+    "pytest-cov",
+    "pytest-benchmark",
+    "pre-commit",
+]
+
+# --- Ruff configuration -----------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# Enable core rules + isort + pyupgrade
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = [
+    "E501",   # line-length is handled by formatter
+]
+# Fix the import order so it doesn't fight with isort
+fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+# --- Mypy configuration -----------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = false                    # start here, then gradually enable
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+ignore_missing_imports = true     # for libraries without type stubs (opencv, mediapipe)
+exclude = [
+    "tests/",
+    "build/",
+    "dist/",
+]
+# If you add type stubs later, you can tighten this.
+
+# --- Pytest configuration ---------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = [
+    "--strict-markers",
+    "--verbose",
+    "--cov=src/gym_failure_proximity",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--junitxml=report.xml",
+]
+# markers you can use in tests, e.g. @pytest.mark.slow
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: integration tests",
+    "e2e: end-to-end tests",
+]
+
+# --- Coverage configuration (optional, can also live in .coveragerc) --------
+[tool.coverage.run]
+branch = true
+source = ["src/gym_failure_proximity"]
+
+[tool.coverage.report]
+fail_under = 80                    # Set your coverage threshold here
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+]
+
+# --- Setuptools-specific (if you use src layout) ----------------------------
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# If you want to include data files (e.g., test videos, default configs)
+# [tool.setuptools.package-data]
+# gym_failure_proximity = ["data/*", "config/*.yaml"]

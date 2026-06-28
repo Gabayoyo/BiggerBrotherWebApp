@@ -1,5 +1,5 @@
 # MediaPipe landmark indices (0-32)
-LANDMARK_INDICES = {
+LANDMARK_INDICES: dict[str, int] = {
     # face
     "NOSE": 0,
     "LEFT_EYE_INNER": 1,
@@ -39,7 +39,7 @@ LANDMARK_INDICES = {
 }
 
 # triplets of landmarks for angle calculations (joint angles)
-ANGLE = {
+ANGLE: dict[str, tuple[str, str, str]] = {
     "ELBOW_LEFT": ("LEFT_SHOULDER", "LEFT_ELBOW", "LEFT_WRIST"),
     "ELBOW_RIGHT": ("RIGHT_SHOULDER", "RIGHT_ELBOW", "RIGHT_WRIST"),
     "SHOULDER_LEFT": ("LEFT_HIP", "LEFT_SHOULDER", "LEFT_ELBOW"),
@@ -49,7 +49,7 @@ ANGLE = {
 }
 
 # which angles we are interested in for a given exercise when computing angle/ROM
-ANGLES_OF_INTEREST = {
+ANGLES_OF_INTEREST: dict[str, list[str]] = {
     "tricep_extension": ["ELBOW_LEFT", "ELBOW_RIGHT"],
     "bicep_curl": ["ELBOW_LEFT", "ELBOW_RIGHT"],
 }
@@ -68,7 +68,8 @@ def get_landmark_indices_from_angle(angle_name: str) -> tuple[int, int, int]:
         raise ValueError(f"Angle '{angle_name}' not defined in ANGLE dictionary.")
 
     landmark_names = ANGLE[angle_name]
-    return tuple(LANDMARK_INDICES[name] for name in landmark_names)
+    name1, name2, name3 = landmark_names
+    return (LANDMARK_INDICES[name1], LANDMARK_INDICES[name2], LANDMARK_INDICES[name3])
 
 
 # given an exercise name, return the corresponding landmark indices for all angles of interest.

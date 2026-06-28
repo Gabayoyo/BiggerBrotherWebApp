@@ -18,7 +18,7 @@ def _calculate_angle(a: Landmark, b: Landmark, c: Landmark) -> float:
 
     cosine_angle = np.dot(ba, bc) / (norm_ba * norm_bc)
     cosine_angle = np.clip(cosine_angle, -1.0, 1.0)
-    return np.degrees(np.arccos(cosine_angle))
+    return float(np.degrees(np.arccos(cosine_angle)))
 
 
 # main function to derive angles from exercise/frame data

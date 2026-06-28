@@ -1,3 +1,5 @@
+from typing import Optional
+
 from dto.frame_data import FrameData
 from landmark_dicts import get_landmark_indices_from_exercise
 
@@ -10,7 +12,7 @@ class Exercise:
         limbs: list[tuple[int, int, int]],
         bilateral: str,
         is_flexion: bool,
-        frame_data: list[FrameData] = None,
+        frame_data: Optional[list[FrameData]] = None,
     ):
         self.name = name
 

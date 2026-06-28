@@ -39,5 +39,5 @@ def compute_1rm(weight: float, reps: int) -> float:
             "Choose a weight different from approximately 1.744."
         )
 
-    one_rm = weight * (1 + (reps - 1) ** 0.85 / denom)
+    one_rm: float = weight * (1 + (reps - 1) ** 0.85 / denom)
     return one_rm
