@@ -13,6 +13,7 @@ class RepAnalysisResult:
     # may want a more complex field type here if we want to include metadata about the exercise/video
     exercise: str
     metrics: list[RepMetric]
+    estimated_1RM: float = None
 
     # returns a string table representation of the analysis result for console output.
     def summary_table(self, title: str = "Analysis Results") -> str:
@@ -29,7 +30,9 @@ class RepAnalysisResult:
         table_str = tabulate(table_data, headers=headers, tablefmt="simple")
         table_width = len(table_str.splitlines()[0])
         title_line = title.center(table_width)
-        return f"{title_line}\n{table_str}"
+        table = f"{title_line}\n{table_str}"
+        output = f"{table}\nEstimated 1RM: {self.estimated_1RM:.2f} kg"
+        return output
     
     def console_output(self) -> str:
         return (
@@ -47,7 +50,8 @@ class RirAnalysisResult:
     rir_estimate: int
     # rir_rationale: str
     failure_metrics: list[RepMetric] | None = None
+    estimated_1RM: float = None
 
     def summary_table(self) -> str:
-        base = RepAnalysisResult(self.video_path, self.metrics).summary_table()
+        base = RepAnalysisResult(self.video_path, self.metrics, self.estimated_1RM).summary_table()
         return base + f"\nEstimated RiR: {self.rir_estimate} rep(s)"

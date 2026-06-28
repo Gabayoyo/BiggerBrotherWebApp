@@ -1,5 +1,6 @@
 import argparse
 
+from analysis.compute_1RM import compute_1RM
 from analysis.compute_VL_curve import compute_VL_curve
 from dto.input_config import InputConfig
 from dto.results import RepAnalysisResult, RirAnalysisResult
@@ -39,16 +40,12 @@ class BiggerBrother:
             fps=fps
         )
 
-        return RepAnalysisResult(video_path=video_path, exercise=input_config.exercise, metrics=metrics)
+        estimated_1RM = compute_1RM(input_config.weight, len(metrics)) if metrics else 0.0
+
+        return RepAnalysisResult(video_path=video_path, exercise=input_config.exercise, metrics=metrics, estimated_1RM=estimated_1RM)
 
     # ESTIMATE_RIR "ENDPOINT"
     def estimate_rir(self, target_video_path: Path, calibration_video_path: Path, input_config: InputConfig) -> RirAnalysisResult:
-        # get load-velocity profile
-        # plot kg to velocity
-        # this finds 1RM
-        # VL (%) = 100 × (V_BEST - V_LAST) / V_BEST
-        # converts this velocity loss to percentage of repetitions performed
-        # RIR = (Reps Completed / % Reps Performed) - Reps Completed
 
         frame_data, fps = self.pose_estimator.process_video(calibration_video_path)
         
@@ -62,7 +59,8 @@ class BiggerBrother:
         
         coeffs = compute_VL_curve(calibration_metrics, visualise_curve=input_config.visualise_curve)
         estimated_rir = estimate_rir_from_curve(calibration_metrics, coeffs)
-        return RirAnalysisResult(video_path=target_video_path, metrics=calibration_metrics, rir_estimate=estimated_rir)
+        estimated_1RM = compute_1RM(input_config.weight, len(calibration_metrics) + estimated_rir) if calibration_metrics else 0.0
+        return RirAnalysisResult(video_path=target_video_path, metrics=calibration_metrics, rir_estimate=estimated_rir, estimated_1RM=estimated_1RM)
 
 def main():
     parser = argparse.ArgumentParser(
