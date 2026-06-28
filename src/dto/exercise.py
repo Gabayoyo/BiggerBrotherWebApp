@@ -1,4 +1,3 @@
-
 from dto.frame_data import FrameData
 from landmark_dicts import get_landmark_indices_from_exercise
 

@@ -91,7 +91,7 @@ class TestEstimateRir:
                 bb_instance.pose_estimator, "process_video", return_value=([], 10.0)
             ),
             mock.patch("bigger_brother.compute_metrics", return_value=few_metrics),
-            pytest.raises(ValueError, match="has only 2 rep")
+            pytest.raises(ValueError, match="has only 2 rep"),
         ):
             bb_instance.estimate_rir(target_video, calib_video, input_config)
 

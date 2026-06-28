@@ -1,4 +1,3 @@
-
 from scipy.signal import find_peaks
 
 from dto.rep_metric import RepMetric

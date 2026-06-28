@@ -23,7 +23,9 @@ def smooth_floats(signal: NDArray[np.float64], window_size: int = 5) -> list[flo
             x[np.isnan(signal)], x[not_nan], signal[not_nan]
         )
 
-    smoothed: NDArray[np.float64] = savgol_filter(signal, window_length=window_size, polyorder=2)
+    smoothed: NDArray[np.float64] = savgol_filter(
+        signal, window_length=window_size, polyorder=2
+    )
     return cast(list[float], smoothed.tolist())
 
 

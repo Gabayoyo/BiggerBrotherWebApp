@@ -51,7 +51,7 @@ class FrameData:
 
     # get landmark by readable name
     def get_landmark_by_name(self, name: str) -> Landmark:
-        index: int = LANDMARK_INDICES[name]   # explicit int type for mypy
+        index: int = LANDMARK_INDICES[name]  # explicit int type for mypy
         return self.landmarks[index]
 
     # get world landmark by index or name
@@ -60,7 +60,7 @@ class FrameData:
 
     # get world landmark by readable name
     def get_world_landmark_by_name(self, name: str) -> Landmark:
-        index: int = LANDMARK_INDICES[name]   # explicit int type for mypy
+        index: int = LANDMARK_INDICES[name]  # explicit int type for mypy
         return self.world_landmarks[index]
 
     # get all landmarks as a numpy array (33, 3)

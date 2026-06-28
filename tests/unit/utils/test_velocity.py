@@ -51,19 +51,24 @@ def make_velocity_frames(
         # Right wrist if needed
         if bilateral in ("bilateral", "right"):
             xr, yr, zr = positions_right[i]
-            world[right_idx] = Landmark(xr, yr, zr, visibility=vis_right[i], presence=1.0)
-        frames.append(FrameData(
-            frame_number=i,
-            timestamp_s=i / fps,
-            landmarks=world,
-            world_landmarks=world
-        ))
+            world[right_idx] = Landmark(
+                xr, yr, zr, visibility=vis_right[i], presence=1.0
+            )
+        frames.append(
+            FrameData(
+                frame_number=i,
+                timestamp_s=i / fps,
+                landmarks=world,
+                world_landmarks=world,
+            )
+        )
     return frames
 
 
 def make_exercise(name, bilateral, frames, is_flexion=True):
     """Helper to construct an exercise with the correct limb indices."""
     from landmark_dicts import get_landmark_indices_from_exercise
+
     limbs = get_landmark_indices_from_exercise(name)
     if bilateral != "bilateral":
         side = 0 if bilateral == "left" else 1
@@ -73,8 +78,9 @@ def make_exercise(name, bilateral, frames, is_flexion=True):
         limbs=limbs,
         bilateral=bilateral,
         is_flexion=is_flexion,
-        frame_data=frames
+        frame_data=frames,
     )
+
 
 def test_derive_velocity_too_few_frames():
     """<2 frames → returns list of zeros."""
@@ -89,7 +95,9 @@ def test_derive_velocity_unilateral_left_high_confidence():
     # 0.1 m per frame at 30 fps → speed = 3.0 m/s
     n = 25
     pos = [(0.1 * i, 0.0, 0.0) for i in range(n)]
-    frames = make_velocity_frames("bicep_curl", "left", pos, vis_left=[1.0] * n, fps=30.0)
+    frames = make_velocity_frames(
+        "bicep_curl", "left", pos, vis_left=[1.0] * n, fps=30.0
+    )
     ex = make_exercise("bicep_curl", "left", frames)
     vel = derive_velocity(ex, fps=30.0)
     # Interior values (excluding boundaries) should be around 3.0 m/s
@@ -133,8 +141,13 @@ def test_derive_velocity_bilateral_both_high_confidence_equal_weight():
     n = 25
     pos = [(0.1 * i, 0.0, 0.0) for i in range(n)]  # 3.0 m/s
     frames = make_velocity_frames(
-        "bicep_curl", "bilateral", pos, pos,
-        vis_left=[1.0] * n, vis_right=[1.0] * n, fps=30.0
+        "bicep_curl",
+        "bilateral",
+        pos,
+        pos,
+        vis_left=[1.0] * n,
+        vis_right=[1.0] * n,
+        fps=30.0,
     )
     ex = make_exercise("bicep_curl", "bilateral", frames)
     vel = derive_velocity(ex, fps=30.0)
@@ -145,13 +158,18 @@ def test_derive_velocity_bilateral_both_high_confidence_equal_weight():
 def test_derive_velocity_bilateral_one_low_confidence():
     """One side has low visibility → weighted, velocity still near left side's speed."""
     n = 25
-    pos_left = [(0.1 * i, 0, 0) for i in range(n)]   # 3.0 m/s
-    pos_right = [(0, 0, 0) for i in range(n)]         # stationary
+    pos_left = [(0.1 * i, 0, 0) for i in range(n)]  # 3.0 m/s
+    pos_right = [(0, 0, 0) for i in range(n)]  # stationary
     vis_left = [1.0] * n
-    vis_right = [0.2] * n   # low confidence
+    vis_right = [0.2] * n  # low confidence
     frames = make_velocity_frames(
-        "bicep_curl", "bilateral", pos_left, pos_right,
-        vis_left=vis_left, vis_right=vis_right, fps=30.0
+        "bicep_curl",
+        "bilateral",
+        pos_left,
+        pos_right,
+        vis_left=vis_left,
+        vis_right=vis_right,
+        fps=30.0,
     )
     ex = make_exercise("bicep_curl", "bilateral", frames)
     vel = derive_velocity(ex, fps=30.0)
@@ -167,8 +185,13 @@ def test_derive_velocity_bilateral_zero_confidence():
     n = 25
     pos = [(0.1 * i, 0, 0) for i in range(n)]
     frames = make_velocity_frames(
-        "bicep_curl", "bilateral", pos, pos,
-        vis_left=[0.0] * n, vis_right=[0.0] * n, fps=30.0
+        "bicep_curl",
+        "bilateral",
+        pos,
+        pos,
+        vis_left=[0.0] * n,
+        vis_right=[0.0] * n,
+        fps=30.0,
     )
     ex = make_exercise("bicep_curl", "bilateral", frames)
     vel = derive_velocity(ex, fps=30.0)
@@ -179,7 +202,9 @@ def test_derive_velocity_all_frames_invisible_unilateral():
     """All frames low confidence → positions zeroed → velocity zero."""
     n = 25
     pos = [(0.1 * i, 0.2 * i, 0.3 * i) for i in range(n)]
-    frames = make_velocity_frames("bicep_curl", "left", pos, vis_left=[0.0] * n, fps=30.0)
+    frames = make_velocity_frames(
+        "bicep_curl", "left", pos, vis_left=[0.0] * n, fps=30.0
+    )
     ex = make_exercise("bicep_curl", "left", frames)
     vel = derive_velocity(ex, fps=30.0)
     # After zeroing out, positions constant → velocity zero (or near zero due to filtering noise)

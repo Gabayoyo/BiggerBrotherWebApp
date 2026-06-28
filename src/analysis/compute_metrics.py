@@ -41,7 +41,7 @@ def compute_metrics(
     smoothed_angles = smooth_floats(np.array(angles))
 
     if visualise:
-        anim = animate_skeleton(frame_data) # noqa: F841
+        anim = animate_skeleton(frame_data)  # noqa: F841
 
     # count reps, returns rep metrics
     metrics = compute_reps(smoothed_angles, fps, is_flexion=exercise_info.is_flexion)

@@ -6,33 +6,33 @@ from tabulate import tabulate
 from dto.rep_metric import RepMetric
 
 
-def _summary_table( title: str, metrics: list[RepMetric], estimated_1rm: float | None = None) -> str:
-        headers = [
-            "Rep",
-            "ROM°",
-            "Mean Concentric Speed m/s",
-            "Concentric Duration (s)",
-            "Total Duration (s)",
-        ]
-        table_data = []
-        for m in metrics:
-            table_data.append(
-                [
-                    m.rep_number,
-                    f"{m.rom_degrees:.1f}",
-                    f"{m.mean_concentric_speed_ms:.2f}",
-                    f"{m.con_duration_s:.2f}"
-                    if m.con_duration_s is not None
-                    else "N/A",
-                    f"{m.rep_duration_s:.2f}",
-                ]
-            )
-        table_str = tabulate(table_data, headers=headers, tablefmt="simple")
-        table_width = len(table_str.splitlines()[0])
-        title_line = title.center(table_width)
-        table = f"{title_line}\n{table_str}"
-        output = f"{table}\n\nEstimated 1rm: {estimated_1rm:.2f} kg"
-        return output
+def _summary_table(
+    title: str, metrics: list[RepMetric], estimated_1rm: float | None = None
+) -> str:
+    headers = [
+        "Rep",
+        "ROM°",
+        "Mean Concentric Speed m/s",
+        "Concentric Duration (s)",
+        "Total Duration (s)",
+    ]
+    table_data = []
+    for m in metrics:
+        table_data.append(
+            [
+                m.rep_number,
+                f"{m.rom_degrees:.1f}",
+                f"{m.mean_concentric_speed_ms:.2f}",
+                f"{m.con_duration_s:.2f}" if m.con_duration_s is not None else "N/A",
+                f"{m.rep_duration_s:.2f}",
+            ]
+        )
+    table_str = tabulate(table_data, headers=headers, tablefmt="simple")
+    table_width = len(table_str.splitlines()[0])
+    title_line = title.center(table_width)
+    table = f"{title_line}\n{table_str}"
+    output = f"{table}\n\nEstimated 1rm: {estimated_1rm:.2f} kg"
+    return output
 
 
 # returned by analyse_reps(). Contains the per-rep metrics as well as the exercise and video path
