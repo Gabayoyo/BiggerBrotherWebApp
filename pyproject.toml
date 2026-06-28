@@ -66,6 +66,9 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 
+[tool.ruff.lint.isort]
+known-first-party = ["analysis", "dto", "model", "utils", "visualisation"]
+
 # --- Mypy configuration -----------------------------------------------------
 [tool.mypy]
 python_version = "3.12"
