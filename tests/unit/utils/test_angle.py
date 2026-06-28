@@ -29,6 +29,20 @@ def make_limb_landmarks(
                  visibility=vis_wrs, presence=1.0),
     ]
 
+def _make_bilateral_frame(l_shoulder, l_elbow, l_wrist, l_vis,
+                          r_shoulder, r_elbow, r_wrist, r_vis, frame_num=0):
+    landmarks = [Landmark(0,0,0,0,0)] * 33   # dummy base
+    # left limb indices (example: 11,13,15)
+    landmarks[11] = Landmark(*l_shoulder, visibility=l_vis, presence=1.0)
+    landmarks[13] = Landmark(*l_elbow, visibility=l_vis, presence=1.0)
+    landmarks[15] = Landmark(*l_wrist, visibility=l_vis, presence=1.0)
+    # right limb indices (12,14,16)
+    landmarks[12] = Landmark(*r_shoulder, visibility=r_vis, presence=1.0)
+    landmarks[14] = Landmark(*r_elbow, visibility=r_vis, presence=1.0)
+    landmarks[16] = Landmark(*r_wrist, visibility=r_vis, presence=1.0)
+    return FrameData(frame_number=frame_num, timestamp_s=0.0,
+                     landmarks=landmarks, world_landmarks=landmarks[:])
+
 
 def build_frame_from_limbs(left_limb_landmarks, right_limb_landmarks=None):
     """
@@ -254,3 +268,51 @@ def test_derive_angles_multiple_frames():
     # Both frames identical => both angles equal 90°
     for a in angles:
         assert pytest.approx(a, rel=1e-5) == 90.0
+
+class TestBilateralAngle:
+    def test_both_sides_visible_averages(self):
+        # Both sides set to 90° angle (using same coordinates)
+        # 90° -> wrist at (1,0,0) relative to elbow at origin, shoulder (0,-1,0)
+        elbow = (0,0,0)
+        shoulder = (0,-1,0)
+        wrist = (1,0,0)
+        frame = _make_bilateral_frame(
+            shoulder, elbow, wrist, 0.9,
+            shoulder, elbow, wrist, 0.8,
+        )
+        exercise = mock_exercise_bilateral([(11,13,15), (12,14,16)], [frame])
+        angles = derive_angles(exercise)
+        assert len(angles) == 1
+        # Both should be 90°, weighted avg = (90*0.9 + 90*0.8)/(1.7) = 90
+        assert angles[0] == pytest.approx(90.0)
+
+    def test_one_side_low_visibility_uses_other(self):
+        # Left visibility 0.9, right 0.6 (<0.7) → use left angle only
+        frame = _make_bilateral_frame(
+            (0,-1,0), (0,0,0), (1,0,0), 0.9,   # 90°
+            (0,-1,0), (0,0,0), (0,1,0), 0.6,   # 180° (straight arm? but irrelevant)
+        )
+        exercise = mock_exercise_bilateral([(11,13,15), (12,14,16)], [frame])
+        angles = derive_angles(exercise)
+        assert len(angles) == 1
+        # Only left used -> 90°
+        assert angles[0] == pytest.approx(90.0)
+
+    def test_both_low_visibility_gives_nan(self):
+        frame = _make_bilateral_frame(
+            (0,-1,0), (0,0,0), (1,0,0), 0.5,
+            (0,-1,0), (0,0,0), (1,0,0), 0.6,
+        )
+        exercise = mock_exercise_bilateral([(11,13,15), (12,14,16)], [frame])
+        angles = derive_angles(exercise)
+        assert len(angles) == 1
+        assert np.isnan(angles[0])
+
+def mock_exercise_bilateral(limb_indices, frames):
+    """Helper that builds a minimal exercise object for bilateral testing."""
+    class Exercise:
+        def __init__(self):
+            self.frame_data = frames
+            self.limbs = [limb_indices[0], limb_indices[1]]
+            self.bilateral = "bilateral"
+    return Exercise()

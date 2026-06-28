@@ -9,6 +9,7 @@ if SRC_PATH not in sys.path:
 
 from dto.frame_data import Landmark
 from dto.rep_metric import RepMetric
+from dto.input_config import InputConfig
 
 @pytest.fixture(scope="function")
 def make_landmarks():
@@ -49,3 +50,14 @@ def make_metrics():
             )
         return metrics
     return _factory
+
+@pytest.fixture
+def input_config():
+    """Default InputConfig for tests – can be overridden per test."""
+    return InputConfig(
+        exercise="bicep_curl",
+        weight=10.0,
+        laterality="right",
+        visualise=False,
+        visualise_curve=False,
+    )

@@ -18,8 +18,15 @@ from utils.velocity import derive_velocity
 
 from utils.velocity import derive_velocity
 
+MIN_FRAMES = 20
+
 # core function that computes metrics from the pose estimation output
 def compute_metrics(frame_data: list[FrameData], visualise: bool, exercise: str, laterality: str, fps: float) -> list[RepMetric]:
+    
+    if len(frame_data) < MIN_FRAMES:
+        raise ValueError(
+            f"At least {MIN_FRAMES} frames are required, got {len(frame_data)}."
+        )
 
     # construct exercise instance from exercise name and laterality, which contains the relevant landmarks for angle derivation
     exercise_info = get_exercise(exercise, laterality, frame_data)

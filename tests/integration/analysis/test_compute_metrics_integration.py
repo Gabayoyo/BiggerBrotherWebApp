@@ -126,3 +126,12 @@ class TestComputeMetricsIntegration:
             assert rep.con_end_frame == 19
             assert rep.mean_concentric_speed_ms is not None
             assert rep.mean_concentric_speed_ms >= 0.0
+
+    def test_small_bump_not_detected_as_rep(self):
+        """A tiny fluctuation (prominence < 30) should yield zero reps."""
+        # Create a signal that goes 80 → 85 → 80 over 20 frames – tiny wiggle
+        angles = [80] * 10 + [82, 85, 82] + [80] * 7
+        angles = angles[:20]  # ensure exactly 20
+        frames = _make_frames(angles, fps=10.0)
+        metrics = compute_metrics(frames, False, "bicep_curl", "right", 10.0)
+        assert metrics == []

@@ -62,6 +62,7 @@ class BiggerBrother:
         
         coeffs = compute_VL_curve(calibration_metrics, visualise_curve=input_config.visualise_curve)
         estimated_rir = estimate_rir_from_curve(calibration_metrics, coeffs)
+        return RirAnalysisResult(video_path=target_video_path, metrics=calibration_metrics, rir_estimate=estimated_rir)
 
 def main():
     parser = argparse.ArgumentParser(
