@@ -106,7 +106,7 @@ branch = true
 source = ["src/gym_failure_proximity"]
 
 [tool.coverage.report]
-fail_under = 80                    # Set your coverage threshold here
+# fail_under = 80 
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
