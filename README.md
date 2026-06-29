@@ -11,7 +11,7 @@ A computer vision software that extracts pose data from exercise videos and uses
 - **RIR estimation** – Reps in reserve can be estimated when a calibration video is provided.
 - **Velocity–load curve** – Polynomial regression is performed on the user's previous rep metrics, allowing for individualised fatigue benchmarking on subsequent sets.
   (Requires at least 3 reps.)
-- **Visualisation** – Optional 2D skeleton animation and velocity‑load curve plot.
+- **Visualisation** – Optional 3D skeleton animation and velocity‑load curve plot.
 
 ## Features
 
