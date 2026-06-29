@@ -1,5 +1,3 @@
-import sys
-
 import cv2
 import numpy as np
 import pytest
@@ -20,7 +18,6 @@ def create_test_video(path, num_frames=10, fps=30, size=(100, 100)):
     out.release()
 
 
-@pytest.mark.skipif(sys.platform == "linux", reason="Debugging mock discrepancy on CI")
 def test_process_video_integration(tmp_path):
     """
     Run process_video on a real synthetic video using the actual MediaPipe model.
@@ -39,6 +36,7 @@ def test_process_video_integration(tmp_path):
         model_path=model_path,
         cache_dir=tmp_path / "cache",
         cache_data=False,
+        use_gpu=False,
     )
 
     frame_data, fps = estimator.process_video(video_path, frame_skip=1)
@@ -50,23 +48,27 @@ def test_process_video_integration(tmp_path):
         assert len(fd.landmarks) == 33
 
 
-@pytest.mark.skipif(sys.platform == "linux", reason="Debugging mock discrepancy on CI")
 def test_fps_extraction(tmp_path):
     video_path = tmp_path / "fps_test.mp4"
     create_test_video(video_path, num_frames=30, fps=15.0)  # 15 fps
     estimator = PoseEstimator(
-        model_path=ensure_model(), cache_dir=tmp_path / "cache", cache_data=False
+        model_path=ensure_model(),
+        cache_dir=tmp_path / "cache",
+        cache_data=False,
+        use_gpu=False,
     )
     _, fps = estimator.process_video(video_path, frame_skip=1)
     assert fps == 15.0
 
 
-@pytest.mark.skipif(sys.platform == "linux", reason="Debugging mock discrepancy on CI")
 def test_caching_returns_identical_data(tmp_path):
     video_path = tmp_path / "cache.mp4"
     create_test_video(video_path, num_frames=10, fps=10)
     estimator = PoseEstimator(
-        model_path=ensure_model(), cache_dir=tmp_path / "cache", cache_data=True
+        model_path=ensure_model(),
+        cache_dir=tmp_path / "cache",
+        cache_data=True,
+        use_gpu=False,
     )
     fd1, fps1 = estimator.process_video(video_path, frame_skip=1)
     fd2, fps2 = estimator.process_video(video_path, frame_skip=1)

@@ -11,17 +11,17 @@ from analysis.pose_estimator import PoseEstimator
 def create_mock_video_capture(total_frames, opened=True):
     mock_cap = mock.MagicMock()
     mock_cap.isOpened.return_value = opened
-    grab_responses = [True] * total_frames + [False]
-    retrieve_responses = [
-        (True, np.zeros((10, 10, 3), dtype=np.uint8)) for _ in range(total_frames)
-    ]
-
-    def grab_side_effect():
-        return grab_responses.pop(0)
-
-    mock_cap.grab.side_effect = grab_side_effect
-    mock_cap.retrieve.side_effect = retrieve_responses
     mock_cap.get.return_value = 30.0
+
+    frames = [(True, np.zeros((10, 10, 3), dtype=np.uint8))] * total_frames + [
+        (False, None)
+    ]
+    frame_iter = iter(frames)
+
+    def read_side_effect():
+        return next(frame_iter)
+
+    mock_cap.read.side_effect = read_side_effect
     return mock_cap
 
 
