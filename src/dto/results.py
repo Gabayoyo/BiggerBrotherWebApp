@@ -31,7 +31,7 @@ def _summary_table(
     table_width = len(table_str.splitlines()[0])
     title_line = title.center(table_width)
     table = f"{title_line}\n{table_str}"
-    output = f"{table}\n\nEstimated 1rm: {estimated_1rm:.2f} kg"
+    output = f"{table}\n\nEstimated 1RM: {estimated_1rm:.2f} kg"
     return output
 
 
@@ -72,7 +72,7 @@ class RepAnalysisResult:
         table_width = len(table_str.splitlines()[0])
         title_line = title.center(table_width)
         table = f"{title_line}\n{table_str}"
-        output = f"{table}\n\nEstimated 1rm: {self.estimated_1rm:.2f} kg"
+        output = f"{table}\n\nEstimated 1RM: {self.estimated_1rm:.2f} kg"
         return output
 
     def console_output(self) -> str:
