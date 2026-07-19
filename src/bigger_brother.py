@@ -65,7 +65,7 @@ class BiggerBrother:
 
         No video I/O — caller passes already-computed metrics.
         """
-        return _compute_vl_curve(calibration_metrics, visualise_curve=visualise_curve)
+        return _compute_vl_curve(calibration_metrics, visualise_curve=visualise_curve)  # type: ignore[no-any-return]
 
     def estimate_rir(
         self,

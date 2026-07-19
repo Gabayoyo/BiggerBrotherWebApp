@@ -6,3 +6,6 @@ pandas
 scipy
 tabulate
 pytest
+fastapi
+uvicorn[standard]
+python-multipart
