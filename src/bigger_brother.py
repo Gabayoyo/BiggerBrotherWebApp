@@ -1,12 +1,15 @@
 import argparse
 from pathlib import Path
 
+import numpy as np
+
 from analysis.compute_1rm import compute_1rm
 from analysis.compute_metrics import compute_metrics
-from analysis.compute_vl_curve import compute_vl_curve
+from analysis.compute_vl_curve import compute_vl_curve as _compute_vl_curve
 from analysis.estimate_rir import estimate_rir_from_curve
 from analysis.pose_estimator import PoseEstimator
 from dto.input_config import InputConfig
+from dto.rep_metric import RepMetric
 from dto.results import RepAnalysisResult, RirAnalysisResult
 from model import ensure_model
 
@@ -25,11 +28,13 @@ class BiggerBrother:
             self.model_path, cache_dir=self.cache_dir, cache_data=self.cache_data
         )
 
-    # ANALYSE_REPS "ENDPOINT"
-    # given frame data from pose estimation, returns a RepAnalysisResult with rep metrics
-    def analyse_reps(
+    def get_metrics(
         self, video_path: Path, input_config: InputConfig
     ) -> RepAnalysisResult:
+        """Process a video and return per-rep metrics + estimated 1RM.
+
+        Used for both regular analysis and calibration uploads.
+        """
         frame_data, fps = self.pose_estimator.process_video(video_path)
 
         metrics = compute_metrics(
@@ -51,39 +56,27 @@ class BiggerBrother:
             estimated_1rm=estimated_1rm,
         )
 
-    # ESTIMATE_RIR "ENDPOINT"
+    def compute_vl_curve(
+        self,
+        calibration_metrics: list[RepMetric],
+        visualise_curve: bool = False,
+    ) -> np.poly1d:
+        """Pure computation: calibration metrics → VL curve coefficients.
+
+        No video I/O — caller passes already-computed metrics.
+        """
+        return _compute_vl_curve(calibration_metrics, visualise_curve=visualise_curve)
+
     def estimate_rir(
         self,
-        target_video_path: Path,
-        calibration_video_path: Path,
-        input_config: InputConfig,
-    ) -> RirAnalysisResult:
+        target_metrics: list[RepMetric],
+        vl_model: np.poly1d,
+    ) -> int:
+        """Pure computation: target metrics + VL model → reps in reserve.
 
-        frame_data, fps = self.pose_estimator.process_video(calibration_video_path)
-
-        calibration_metrics = compute_metrics(
-            frame_data,
-            visualise=input_config.visualise,
-            exercise=input_config.exercise,
-            laterality=input_config.laterality,
-            fps=fps,
-        )
-
-        coeffs = compute_vl_curve(
-            calibration_metrics, visualise_curve=input_config.visualise_curve
-        )
-        estimated_rir = estimate_rir_from_curve(calibration_metrics, coeffs)
-        estimated_1rm = (
-            compute_1rm(input_config.weight, len(calibration_metrics) + estimated_rir)
-            if calibration_metrics
-            else 0.0
-        )
-        return RirAnalysisResult(
-            video_path=target_video_path,
-            metrics=calibration_metrics,
-            rir_estimate=estimated_rir,
-            estimated_1rm=estimated_1rm,
-        )
+        No video I/O — caller passes already-computed metrics and model.
+        """
+        return int(estimate_rir_from_curve(target_metrics, vl_model))
 
 
 def main():
@@ -145,17 +138,22 @@ def main():
         visualise_curve=args.visualise_curve,
     )
 
-    # if calibration, estimate rir...
-
-    # rir = service.estimate_rir(
-    #     target_video_path=Path(args.input_path),
-    #     calibration_video_path=Path(args.input_path),
-    #     input_config=config,
-    # )
-
-    if args.input_path:
-        rep_analysis_result = service.analyse_reps(Path(args.input_path), config)
-        print(rep_analysis_result.console_output())
+    if args.calibration_path:
+        # Two-step: calibration → VL curve → target metrics → RiR
+        calib_result = service.get_metrics(Path(args.calibration_path), config)
+        vl_model = service.compute_vl_curve(calib_result.metrics)
+        target_result = service.get_metrics(Path(args.input_path), config)
+        rir = service.estimate_rir(target_result.metrics, vl_model)
+        rir_result = RirAnalysisResult(
+            video_path=Path(args.input_path),
+            metrics=target_result.metrics,
+            rir_estimate=rir,
+            estimated_1rm=target_result.estimated_1rm,
+        )
+        print(rir_result.summary_table())
+    elif args.input_path:
+        result = service.get_metrics(Path(args.input_path), config)
+        print(result.console_output())
 
 
 if __name__ == "__main__":

@@ -84,7 +84,7 @@ class TestAnalyseReps:
         with mock.patch.object(
             bb_instance.pose_estimator, "process_video", return_value=(frames, fps)
         ):
-            result = bb_instance.analyse_reps(video_path, input_config)
+            result = bb_instance.get_metrics(video_path, input_config)
 
         assert isinstance(result, RepAnalysisResult)
         assert result.video_path == video_path
@@ -104,7 +104,7 @@ class TestAnalyseReps:
             ),
             pytest.raises(ValueError, match="At least 20 frames"),
         ):
-            bb_instance.analyse_reps(video_path, input_config)
+            bb_instance.get_metrics(video_path, input_config)
 
     def test_visualise_flag_does_not_crash(
         self, bb_instance, video_path, input_config, monkeypatch
@@ -117,7 +117,7 @@ class TestAnalyseReps:
         with mock.patch.object(
             bb_instance.pose_estimator, "process_video", return_value=(frames, fps)
         ):
-            result = bb_instance.analyse_reps(video_path, input_config)
+            result = bb_instance.get_metrics(video_path, input_config)
 
         assert isinstance(result, RepAnalysisResult)
         assert len(result.metrics) == 1
@@ -133,4 +133,4 @@ class TestAnalyseReps:
             ),
             pytest.raises(ValueError),
         ):
-            bb_instance.analyse_reps(video_path, input_config)
+            bb_instance.get_metrics(video_path, input_config)
