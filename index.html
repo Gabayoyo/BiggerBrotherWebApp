@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en" class="bg-cream text-ink">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BiggerBrother — AI Gym Analytics for Lifters</title>
+    <meta name="description" content="Upload a training video and get rep-by-rep metrics: velocity, range of motion, form score, and reps-in-reserve estimation. No wearables, no sensors." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://biggerbrother.app/" />
+
+    <meta property="og:title" content="BiggerBrother — AI Gym Analytics for Lifters" />
+    <meta property="og:description" content="Upload a training video and get rep-by-rep metrics: velocity, range of motion, form score, and reps-in-reserve estimation. No wearables needed." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://biggerbrother.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="keywords" content="gym analytics, AI form check, rep counting, velocity based training, RIR estimation, squat form analysis, bench press bar path" />
+
+    <!-- Fonts: distinctive grotesque + humanist sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              cream: "#F3EFE6",
+              paper: "#FBF9F4",
+              ink: "#1C1A14",
+              muted: "#726C5E",
+              line: "#E4DECF",
+              accent: "#DA4E1B",
+              accentink: "#8F2F0E",
+              moss: "#3F5B45",
+            },
+            fontFamily: {
+              display: ['"Bricolage Grotesque"', "system-ui", "sans-serif"],
+              sans: ['"Instrument Sans"', "system-ui", "sans-serif"],
+              mono: ['"IBM Plex Mono"', "ui-monospace", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "BiggerBrother",
+      "applicationCategory": "SportsApplication",
+      "operatingSystem": "Web",
+      "description": "Upload a training video and get rep-by-rep metrics: velocity, range of motion, form score, and reps-in-reserve estimation using AI computer vision.",
+      "url": "https://biggerbrother.app/",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "BiggerBrother"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How does BiggerBrother track reps?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "BiggerBrother uses MediaPipe pose estimation to detect 33 body landmarks per frame. It identifies joint angle peaks and troughs to count each rep automatically."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need any wearable sensors?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. BiggerBrother works entirely from video — no smartwatch, no barbell tracker, no sensors required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What exercises are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Back squat, front squat, overhead press, bench press, deadlift, barbell row, bicep curl, and tricep extension."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is my video data handled?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Videos are uploaded to the server, processed in memory, and deleted immediately after analysis. No video data is stored, cached, or logged."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How accurate is the RIR estimate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "RIR accuracy depends on calibration quality. A calibration set taken close to actual failure produces a more reliable velocity-load curve. RIR estimates are most accurate within 0-3 reps of failure."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://biggerbrother.app/" }
+      ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "BiggerBrother",
+      "url": "https://biggerbrother.app/",
+      "description": "AI-powered gym analytics tool for measuring reps, velocity, range of motion, and form score from any training video."
+    }
+    </script>
+
+    <style>
+      [x-cloak] { display: none !important; }
+      .skeleton {
+        position: relative;
+        overflow: hidden;
+        background-color: #e9e3d5;
+      }
+      .skeleton::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          90deg, rgba(251, 249, 244, 0) 0%,
+          rgba(251, 249, 244, 0.65) 50%,
+          rgba(251, 249, 244, 0) 100%
+        );
+        animation: shimmer 1.4s infinite;
+      }
+      @keyframes shimmer { 100% { transform: translateX(100%); } }
+      @media (prefers-reduced-motion: reduce) { .skeleton::after { animation: none; } }
+      .font-display { letter-spacing: -0.01em; font-optical-sizing: auto; }
+    </style>
+
+    <!-- Alpine.js — inlined app logic -->
+    <script defer>
+      document.addEventListener("alpine:init", () => Alpine.data("lab", lab));
+      function lab() {
+        return {
+          state: "upload", step: "intro", uploadType: "regular", dragging: false,
+          fileName: "", playing: false, scrub: 48, showTips: false,
+          progress: 0, statusMessage: "Detecting pose landmarks\u2026",
+          _statuses: [
+            "Detecting pose landmarks\u2026","Segmenting reps\u2026",
+            "Estimating bar velocity\u2026","Scoring movement quality\u2026",
+            "Compiling report\u2026",
+          ],
+          _timer: null,
+          headline: [
+            { label: "Total reps", value: "25", delta: "+3 vs last", up: true },
+            { label: "Avg tempo", value: "3.1s", delta: "\u22120.2s eccentric", up: true },
+            { label: "Peak velocity", value: "0.82 m/s", delta: "+0.05 m/s", up: true },
+            { label: "Avg depth", value: "104\u00b0", delta: "below parallel", up: true },
+          ],
+          details: [
+            { label: "Range of motion", value: "0.61 m", pct: 82 },
+            { label: "Bar path deviation", value: "3.4 cm", pct: 68 },
+            { label: "Concentric power", value: "612 W", pct: 74 },
+            { label: "Tempo consistency", value: "94%", pct: 94 },
+            { label: "Left/right balance", value: "51/49", pct: 88 },
+          ],
+          init() {
+            const hash = window.location.hash.slice(1);
+            if (hash) this.state = hash;
+            window.addEventListener("hashchange", () => {
+              const ns = window.location.hash.slice(1) || "upload";
+              if (ns !== this.state) this.state = ns;
+            });
+            this.$watch("state", (val) => {
+              const cur = window.location.hash.slice(1) || "upload";
+              if (val !== cur) history.replaceState(null, "", "#" + val);
+            });
+          },
+          clearFile() {
+            this.fileName = "";
+            if (this.$refs.fileInput) this.$refs.fileInput.value = "";
+          },
+          handleFile(e) { const f = e.target.files?.[0]; if (f) this.fileName = f.name; },
+          handleDrop(e) { this.dragging = false; const f = e.dataTransfer.files?.[0]; if (f) this.fileName = f.name; },
+          startProcessing() {
+            if (!this.fileName) return;
+            this.state = "processing"; this.progress = 0;
+            clearInterval(this._timer);
+            this._timer = setInterval(() => {
+              this.progress = Math.min(100, this.progress + Math.random() * 14 + 4);
+              const idx = Math.min(this._statuses.length - 1, Math.floor((this.progress / 100) * this._statuses.length));
+              this.statusMessage = this._statuses[idx];
+              if (this.progress >= 100) { clearInterval(this._timer); setTimeout(() => (this.state = "dashboard"), 550); }
+            }, 650);
+          },
+          reset() { clearInterval(this._timer); this.state = "upload"; this.step = "intro"; this.fileName = ""; this.progress = 0; this.playing = false; },
+        };
+      }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  </head>
+
+  <body class="min-h-screen font-sans antialiased selection:bg-accent/20" x-data="lab" x-cloak>
+    <!-- ============ TOP BAR ============ -->
+    <header class="border-b border-line">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <button @click="reset()" class="font-display text-lg font-700 text-ink transition-colors hover:text-accent">BiggerBrother</button>
+        <nav class="hidden items-center gap-8 text-sm text-muted sm:flex">
+
+          <a class="transition-colors hover:text-ink" href="#how-it-works">How it works</a>
+          <a class="transition-colors hover:text-ink" href="#docs">Docs</a>
+          <a class="transition-colors hover:text-ink" href="https://github.com/Gabayoyo/BiggerBrotherWebApp" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-6">
+      <!-- ============================================================= -->
+      <!-- STATE 1 · UPLOAD -->
+      <!-- ============================================================= -->
+      <section x-show="state === 'upload'" class="py-8 sm:py-8">
+        <div class="mx-auto max-w-2xl text-center">
+          <img src="assets/images/logobb.svg" alt="BiggerBrother" class="mx-auto h-24 w-24 sm:h-32 sm:w-32 rounded-2xl" />
+
+          <!-- INTRO STEP: full hero + Get Started -->
+          <div x-show="step === 'intro'" x-transition:enter.duration.150ms x-transition:leave.duration.100ms>
+            <h1 class="mt-6 font-display text-5xl font-700 leading-[1.05] tracking-tight sm:text-6xl">
+              BiggerBrother
+            </h1>
+            <p class="mt-3 text-balance font-display text-xl font-500 text-muted">
+              Always watching you grow.
+            </p>
+            <p class="mt-6 text-pretty text-[15px] leading-relaxed text-muted">
+              Simply upload a video of your sets to get algorithm-powered movement analytics from BiggerBrother. It features the world's first proximity-to-failure estimator software so we'll always know how close you are to your limits. No wearables, no sensors, no fuss.
+            </p>
+            <button type="button" @click="step = 'choose'"
+              class="mt-10 inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-ink px-6 font-display text-sm font-600 text-paper transition-colors hover:bg-accentink">
+              Get Started
+              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            </button>
+          </div>
+
+          <!-- CHOOSE STEP -->
+          <div x-show="step === 'choose'" x-transition:enter.duration.150ms x-transition:leave.duration.100ms class="mt-6 mx-auto max-w-lg">
+            <h2 class="font-display text-2xl font-700 tracking-tight mb-8">1. Choose Video Type</h2>
+            <fieldset class="grid gap-4">
+              <legend class="sr-only">Choose an upload type</legend>
+              <label class="group relative cursor-pointer rounded-2xl border bg-paper p-5 transition-colors min-h-[130px]"
+                :class="uploadType === 'regular' ? 'border-accent ring-1 ring-accent' : 'border-line hover:border-ink/30'">
+                <input type="radio" name="type" value="regular" class="peer sr-only" x-model="uploadType" />
+                <div class="flex items-start gap-4">
+                  <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line bg-cream text-ink">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9 5 3-5 3V9Z"/>
+                    </svg>
+                  </span>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <h2 class="font-display text-lg font-600">Upload Set</h2>
+                    </div>
+                    <p class="mt-1 text-sm leading-relaxed text-muted">Upload a standard set. Derives your reps, one-rep-max, velocity and range of motion.</p>
+                  </div>
+                  <span class="ml-auto mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors"
+                    :class="uploadType === 'regular' ? 'border-accent bg-accent text-paper' : 'border-line'">
+                    <svg x-show="uploadType === 'regular'" viewBox="0 0 24 24" fill="none" class="h-3 w-3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  </span>
+                </div>
+              </label>
+              <label class="group relative cursor-pointer rounded-2xl border bg-paper p-5 transition-colors min-h-[130px]"
+                :class="uploadType === 'calibration' ? 'border-accent ring-1 ring-accent' : 'border-line hover:border-ink/30'">
+                <input type="radio" name="type" value="calibration" class="peer sr-only" x-model="uploadType" />
+                <div class="flex items-start gap-4">
+                  <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line bg-cream text-ink">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/>
+                    </svg>
+                  </span>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <h2 class="font-display text-lg font-600">Upload Calibration Set</h2>
+                    </div>
+                    <p class="mt-1 text-sm leading-relaxed text-muted">Upload a set going to failure. Creates a personalized velocity-failure profile to estimate your reps-in-reserve (RIR) for future sets.</p>
+                  </div>
+                  <span class="ml-auto mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors"
+                    :class="uploadType === 'calibration' ? 'border-accent bg-accent text-paper' : 'border-line'">
+                    <svg x-show="uploadType === 'calibration'" viewBox="0 0 24 24" fill="none" class="h-3 w-3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  </span>
+                </div>
+              </label>
+            </fieldset>
+            <button type="button" @click="step = 'intro'"
+              class="mb-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper px-6 font-display text-sm font-600 text-ink transition-colors hover:border-ink/30">
+              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+              Back
+            </button>
+            <button type="button" @click="step = 'upload'"
+              class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ink px-6 font-display text-sm font-600 text-paper transition-colors hover:bg-accentink">
+              Next
+              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            </button>
+          </div>
+
+          <!-- UPLOAD STEP -->
+          <div x-show="step === 'upload'" x-transition:enter.duration.150ms x-transition:leave.duration.100ms class="mt-6 mx-auto max-w-lg">
+            <h2 class="font-display text-2xl font-700 tracking-tight mb-8">2. Upload Video</h2>
+            <button type="button" @click="step = 'choose'; clearFile()"
+              class="mb-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper px-6 font-display text-sm font-600 text-ink transition-colors hover:border-ink/30">
+              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+              Back
+            </button>
+            <form @submit.prevent="startProcessing()">
+              <div class="flex flex-col">
+                <div @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false"
+                  @drop.prevent="handleDrop($event)"
+                  class="relative flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors"
+                  :class="dragging ? 'border-accent bg-accent/5' : 'border-line bg-paper'">
+
+                  <input type="file" accept="video/*" x-ref="fileInput" class="absolute inset-0 cursor-pointer opacity-0" @change="handleFile($event)" aria-label="Upload video file" />
+
+                  <!-- Info button — top right, visible only when no file is selected -->
+                  <button type="button" @click.stop="showTips = !showTips" x-show="!fileName"
+                    class="absolute right-2 top-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted/20 text-muted hover:bg-moss hover:text-paper transition-colors"
+                    aria-label="Recording tips">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                  </button>
+
+                  <!-- X button — top right, visible only when a file is selected (replaces info) -->
+                  <button type="button" @click.stop="clearFile()" x-show="fileName"
+                    class="absolute right-2 top-2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted/20 text-muted hover:bg-accent hover:text-paper transition-colors"
+                    aria-label="Remove file">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+
+                  <span class="grid h-12 w-12 place-items-center rounded-full bg-cream text-ink">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 17v1.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V17"/>
+                    </svg>
+                  </span>
+                  <p class="mt-4 font-display text-base font-600" x-text="fileName || 'Drag a video here'"></p>
+                  <p class="mt-1 text-sm text-muted" x-show="!fileName">or click to browse — MP4, MOV up to 500MB</p>
+                  <p class="mt-1 font-display text-xs text-moss" x-show="fileName">ready to analyze</p>
+
+                  <div x-show="showTips" @click.away="showTips = false" x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                    class="absolute bottom-10 left-2 z-20 w-64 rounded-xl border border-moss/20 bg-paper p-4 text-left text-sm leading-relaxed text-muted shadow-lg">
+                    <p class="font-display text-xs font-700 uppercase tracking-widest text-moss">For best results</p>
+                    <ul class="mt-1.5 space-y-1">
+                      <li>Film from a <strong>side-on angle</strong> with full body in frame</li>
+                      <li>Use a <strong>static tripod</strong> — no handheld or moving shots</li>
+                      <li>Ensure <strong>good lighting</strong> and no obstructions</li>
+                      <li>30 fps or higher recommended</li>
+                    </ul>
+                  </div>
+                </div>
+                <button type="submit" :disabled="!fileName"
+                  class="mt-4 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-ink px-6 font-display text-sm font-600 text-paper transition-colors enabled:hover:bg-accentink disabled:cursor-not-allowed disabled:opacity-40">
+                  <span x-text="uploadType === 'calibration' ? 'Calibrate profile' : 'Analyze set'"></span>
+                  <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- STATE 2 · PROCESSING -->
+      <!-- ============================================================= -->
+      <section x-show="state === 'processing'" class="py-14 sm:py-16">
+        <div class="flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 class="mt-3 font-display text-3xl font-700 sm:text-4xl">Analyzing your session</h1>
+            <p class="mt-2 text-[15px] text-muted" x-text="statusMessage">Detecting pose landmarks…</p>
+          </div>
+          <div class="w-full max-w-xs">
+            <div class="flex items-center justify-between font-display text-xs text-muted">
+              <span>progress</span><span x-text="progress + '%'">0%</span>
+            </div>
+            <div class="mt-2 h-2 overflow-hidden rounded-full bg-line">
+              <div class="h-full rounded-full bg-accent transition-all duration-300 ease-out" :style="`width:${progress}%`"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-10 grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+          <div class="rounded-2xl border border-line bg-paper p-4">
+            <div class="skeleton aspect-video w-full rounded-xl"></div>
+            <div class="mt-4 flex items-center gap-3">
+              <div class="skeleton h-9 w-9 rounded-full"></div>
+              <div class="skeleton h-2 flex-1 rounded-full"></div>
+              <div class="skeleton h-3 w-12 rounded-full"></div>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-line bg-paper p-5">
+            <div class="skeleton h-3 w-28 rounded-full"></div>
+            <div class="mt-5 grid grid-cols-2 gap-4">
+              <template x-for="i in 4" :key="i">
+                <div class="rounded-xl border border-line p-4">
+                  <div class="skeleton h-2 w-16 rounded-full"></div>
+                  <div class="skeleton mt-3 h-7 w-20 rounded-md"></div>
+                </div>
+              </template>
+            </div>
+            <div class="mt-5 space-y-3">
+              <template x-for="i in 3" :key="i">
+                <div class="flex items-center justify-between">
+                  <div class="skeleton h-2 w-24 rounded-full"></div>
+                  <div class="skeleton h-2 w-10 rounded-full"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <ul class="mt-8 grid gap-2 font-display text-xs text-muted sm:grid-cols-3">
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-moss"></span> pose landmarks</li>
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-moss"></span> rep segmentation</li>
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-accent"></span> velocity model</li>
+        </ul>
+
+        <!-- SKELETON · velocity profile line chart (mirrors dashboard) -->
+        <div class="mt-8 rounded-2xl border border-line bg-paper p-5">
+          <div class="flex items-center justify-between">
+            <div class="skeleton h-4 w-28 rounded-full"></div>
+            <div class="skeleton h-3 w-20 rounded-full"></div>
+          </div>
+          <div class="mt-4">
+            <div class="skeleton h-[200px] w-full rounded-xl"></div>
+          </div>
+          <div class="mt-3 flex items-center gap-4">
+            <div class="skeleton h-3 w-24 rounded-full"></div>
+            <div class="skeleton h-3 flex-1 rounded-full"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- STATE 3 · DASHBOARD + LINE CHART -->
+      <!-- ============================================================= -->
+      <section x-show="state === 'dashboard'" class="py-12 sm:py-14">
+        <div class="flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div class="flex items-center gap-3">
+              <h1 class="font-display text-3xl font-700 tracking-tight">Tricep Extension</h1>
+            </div>
+            <p class="mt-1 font-display text-xs uppercase tracking-[0.18em] text-muted">session #A-2048 · 00:48 · 30fps</p>
+          </div>
+          <button @click="reset()" class="inline-flex h-10 items-center justify-center gap-2 self-start rounded-xl border border-line bg-paper px-4 text-sm font-500 transition-colors hover:border-ink/30 sm:self-auto">
+            <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            New session
+          </button>
+        </div>
+
+        <div class="mt-8 grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+          <!-- VIDEO PREVIEW -->
+          <div class="rounded-2xl border border-line bg-paper p-4">
+            <div class="relative overflow-hidden rounded-xl bg-ink">
+              <div class="aspect-video w-full bg-gradient-to-br from-ink via-zinc-800 to-ink flex items-center justify-center">
+                <img src="assets/images/logobb.svg" alt="BiggerBrother" class="h-16 w-16 opacity-40 sm:h-20 sm:w-20" />
+              </div>
+              <div class="pointer-events-none absolute inset-0">
+                <span class="absolute left-[46%] top-[30%] h-2.5 w-2.5 rounded-full bg-accent ring-4 ring-accent/30"></span>
+                <span class="absolute left-[52%] top-[54%] h-2.5 w-2.5 rounded-full bg-accent ring-4 ring-accent/30"></span>
+                <span class="absolute left-[49%] top-[78%] h-2.5 w-2.5 rounded-full bg-accent ring-4 ring-accent/30"></span>
+              </div>
+              <button @click="playing = !playing" class="absolute inset-0 grid place-items-center" :aria-label="playing ? 'Pause preview' : 'Play preview'">
+                <span class="grid h-16 w-16 place-items-center rounded-full bg-paper/90 text-ink shadow-lg backdrop-blur transition-transform hover:scale-105">
+                  <svg x-show="!playing" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 translate-x-0.5"><path d="M8 5v14l11-7L8 5Z"/></svg>
+                  <svg x-show="playing" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+                </span>
+              </button>
+            </div>
+            <div class="mt-4 flex items-center gap-3">
+              <button @click="playing = !playing" class="grid h-9 w-9 place-items-center rounded-full bg-ink text-paper" :aria-label="playing ? 'Pause' : 'Play'">
+                <svg x-show="!playing" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4 translate-x-px"><path d="M8 5v14l11-7L8 5Z"/></svg>
+                <svg x-show="playing" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+              </button>
+              <div class="relative h-1.5 flex-1 rounded-full bg-line">
+                <div class="absolute inset-y-0 left-0 rounded-full bg-accent" :style="`width:${scrub}%`"></div>
+                <div class="absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-accent bg-paper" :style="`left:calc(${scrub}% - 7px)`"></div>
+              </div>
+              <span class="font-display text-xs text-muted">00:23 / 00:48</span>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <template x-for="r in 5" :key="r">
+                <span class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-cream px-2.5 py-1 font-display text-xs">
+                  <span class="text-muted">rep</span><span class="font-500" x-text="r"></span>
+                </span>
+              </template>
+            </div>
+          </div>
+
+          <!-- METRICS PANEL -->
+          <div class="rounded-2xl border border-line bg-paper p-5">
+            <div class="flex items-center justify-between">
+              <h2 class="font-display text-lg font-600">Session metrics</h2>
+              <span class="font-display text-[11px] uppercase tracking-widest text-muted">per set avg</span>
+            </div>
+            <div class="mt-5 grid grid-cols-2 gap-4">
+              <template x-for="m in headline" :key="m.label">
+                <div class="rounded-xl border border-line bg-cream/60 p-4">
+                  <p class="font-display text-[11px] uppercase tracking-widest text-muted" x-text="m.label"></p>
+                  <p class="mt-2 font-display text-3xl font-700 tracking-tight" x-text="m.value"></p>
+                  <p class="mt-1 text-xs" :class="m.up ? 'text-moss' : 'text-accentink'" x-text="m.delta"></p>
+                </div>
+              </template>
+            </div>
+            <dl class="mt-5 divide-y divide-line">
+              <template x-for="row in details" :key="row.label">
+                <div class="flex items-center justify-between py-3">
+                  <dt class="text-sm text-muted" x-text="row.label"></dt>
+                  <dd class="flex items-center gap-3">
+                    <div class="hidden h-1.5 w-24 rounded-full bg-line sm:block">
+                      <div class="h-full rounded-full bg-moss" :style="`width:${row.pct}%`"></div>
+                    </div>
+                    <span class="w-16 text-right font-display text-sm font-500" x-text="row.value"></span>
+                  </dd>
+                </div>
+              </template>
+            </dl>
+            <div class="mt-4 rounded-xl bg-ink p-4 text-paper">
+              <p class="font-display text-[11px] uppercase tracking-widest text-paper/60">Form score</p>
+              <div class="mt-1 flex items-end gap-2">
+                <span class="font-display text-4xl font-700">92</span>
+                <span class="mb-1 text-sm text-paper/70">/ 100 · depth consistent, minor knee drift on rep 4</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- PLACEHOLDER LINE CHART (velocity over reps) -->
+        <!-- ============================================================= -->
+        <div class="mt-8 rounded-2xl border border-line bg-paper p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="font-display text-base font-600">Velocity profile</h3>
+            <span class="font-display text-[11px] uppercase tracking-widest text-muted">m/s over time</span>
+          </div>
+          <div class="mt-4">
+            <svg viewBox="0 0 600 200" class="w-full h-auto" aria-label="Line chart of barbell velocity per rep">
+              <line x1="0" y1="25" x2="600" y2="25" stroke="#E4DECF" stroke-dasharray="4 4" />
+              <line x1="0" y1="75" x2="600" y2="75" stroke="#E4DECF" stroke-dasharray="4 4" />
+              <line x1="0" y1="125" x2="600" y2="125" stroke="#E4DECF" stroke-dasharray="4 4" />
+              <line x1="0" y1="175" x2="600" y2="175" stroke="#E4DECF" stroke-dasharray="4 4" />
+              <text x="5" y="20" class="fill-muted font-display text-[10px]">1.0</text>
+              <text x="5" y="70" class="fill-muted font-display text-[10px]">0.8</text>
+              <text x="5" y="120" class="fill-muted font-display text-[10px]">0.6</text>
+              <text x="5" y="170" class="fill-muted font-display text-[10px]">0.4</text>
+              <text x="40" y="195" class="fill-muted font-display text-[10px]">1</text>
+              <text x="155" y="195" class="fill-muted font-display text-[10px]">2</text>
+              <text x="275" y="195" class="fill-muted font-display text-[10px]">3</text>
+              <text x="395" y="195" class="fill-muted font-display text-[10px]">4</text>
+              <text x="510" y="195" class="fill-muted font-display text-[10px]">5</text>
+              <text x="560" y="195" class="fill-muted font-display text-[10px]">rep</text>
+              <path d="M30 170 Q100 60 150 90 Q200 30 250 50 Q300 80 350 40 Q400 70 450 55 Q500 65 570 80 L570 175 L30 175 Z"
+                fill="url(#chartGrad)" opacity="0.15" />
+              <path d="M30 170 Q100 60 150 90 Q200 30 250 50 Q300 80 350 40 Q400 70 450 55 Q500 65 570 80"
+                fill="none" stroke="#DA4E1B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="150" cy="90" r="4" fill="#DA4E1B" stroke="#FBF9F4" stroke-width="2" />
+              <circle cx="250" cy="50" r="4" fill="#DA4E1B" stroke="#FBF9F4" stroke-width="2" />
+              <circle cx="350" cy="40" r="4" fill="#DA4E1B" stroke="#FBF9F4" stroke-width="2" />
+              <circle cx="450" cy="55" r="4" fill="#DA4E1B" stroke="#FBF9F4" stroke-width="2" />
+              <circle cx="570" cy="80" r="4" fill="#DA4E1B" stroke="#FBF9F4" stroke-width="2" />
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#DA4E1B" />
+                  <stop offset="100%" stop-color="#DA4E1B" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="mt-2 flex items-center gap-4 text-xs text-muted">
+            <span class="flex items-center gap-1.5"><span class="h-0.5 w-4 rounded bg-accent"></span> concentric peak</span>
+            <span class="text-pretty">Rep 3 shows peak bar velocity — form degradation on final rep.</span>
+          </div>
+        </div>
+      </section>
+      <!-- ============================================================= -->
+      <!-- STATE 4 · HOW IT WORKS -->
+      <!-- ============================================================= -->
+      <section x-show="state === 'how-it-works'" class="py-14 sm:py-20">
+        <div class="mx-auto max-w-2xl">
+          <h1 class="font-display text-4xl font-700 tracking-tight sm:text-5xl">How it works</h1>
+          <div class="mt-8 space-y-6 text-[15px] leading-relaxed text-muted">
+            <p>BiggerBrother uses computer vision to analyse your training videos frame by frame. Upload a clip, and our pose estimation model tracks 33 body landmarks across every frame.</p>
+            <p>From those landmarks we calculate rep count, concentric and eccentric tempo, bar velocity, range of motion, and movement symmetry — all without any wearable sensors.</p>
+
+            <h2 class="font-display text-2xl font-600 tracking-tight text-ink">Step 1: Upload a video</h2>
+            <p>Select a video file (MP4 or MOV, up to 500 MB) of your set. Choose between a <strong>normal upload</strong> for standard analysis or a <strong>calibration upload</strong> if you want absolute measurements and RIR estimation. No account or sign-up is required.</p>
+
+            <h2 class="font-display text-2xl font-600 tracking-tight text-ink">Step 2: Pose tracking</h2>
+            <p>MediaPipe Pose detects 33 landmarks per frame — shoulders, hips, knees, ankles, wrists, and more. The model runs at 30+ fps, giving us a detailed movement timeline for your entire set.</p>
+
+            <h2 class="font-display text-2xl font-600 tracking-tight text-ink">Step 3: Rep detection &amp; metrics</h2>
+            <p>Peak-and-trough analysis on the primary joint angle identifies each rep. For each rep we calculate concentric/eccentric tempo, peak velocity, range of motion, and bar path deviation. A composite form score aggregates symmetry, depth, and bar control.</p>
+
+            <h2 class="font-display text-2xl font-600 tracking-tight text-ink">Step 4: RIR estimation</h2>
+            <p>If you've uploaded a calibration set (taken close to failure), BiggerBrother fits a velocity-load curve to your data. Future sets are compared against this curve to estimate how many reps you had left in the tank.</p>
+
+            <h2 class="font-display text-2xl font-600 tracking-tight text-ink">Recording tips</h2>
+            <ul class="list-disc space-y-2 pl-5">
+              <li>Use a static tripod — no handheld or moving shots.</li>
+              <li>Film from a side-on angle with the full body in frame.</li>
+              <li>Ensure good lighting and no obstructions (spotters, racks).</li>
+              <li>30 fps or higher recommended.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- STATE 5 · DOCS -->
+      <!-- ============================================================= -->
+      <section x-show="state === 'docs'" class="py-14 sm:py-20">
+        <div class="mx-auto max-w-3xl">
+          <h1 class="font-display text-4xl font-700 tracking-tight sm:text-5xl">Documentation</h1>
+          <p class="mt-3 text-[15px] leading-relaxed text-muted">Learn how to set up your camera, calibrate a scene, and interpret every metric on the dashboard.</p>
+
+          <!-- 1. Getting started -->
+          <section class="mt-12">
+            <h2 class="font-display text-2xl font-600 tracking-tight">Getting started</h2>
+            <p class="mt-3 text-[15px] leading-relaxed text-muted">
+              BiggerBrother uses computer vision to analyse your training videos frame by frame. Upload a clip, and our pose estimation model tracks 33 body landmarks across every frame. From those landmarks we calculate rep count, concentric and eccentric tempo, bar velocity, range of motion, and movement symmetry — all without any wearable sensors.
+            </p>
+            <p class="mt-3 text-[15px] leading-relaxed text-muted">
+              No account or sign-up is required. Upload a video in MP4 or MOV format (up to 500 MB) and receive a full metrics dashboard within seconds.
+            </p>
+          </section>
+
+          <!-- 2. Camera setup -->
+          <section class="mt-10">
+            <h2 class="font-display text-2xl font-600 tracking-tight">Camera setup</h2>
+            <p class="mt-3 text-[15px] leading-relaxed text-muted">For best results, follow these guidelines when recording:</p>
+            <ul class="mt-4 space-y-3 text-[15px] leading-relaxed text-muted">
+              <li><strong>Static tripod.</strong> Keep the camera stationary — do not use a moving or handheld shot.</li>
+              <li><strong>Side-on angle.</strong> Position the camera perpendicular to the lifter&rsquo;s plane of motion. A 45-degree front-side angle works for some exercises, but pure lateral is preferred.</li>
+              <li><strong>Full body in frame.</strong> Ensure the entire body is visible from head to toe throughout the entire set. Cropped frames reduce landmark accuracy.</li>
+              <li><strong>Good lighting.</strong> Well-lit scenes produce significantly better landmark detection. Avoid strong backlight, shadows across the body, or dark clothing that blends into the background.</li>
+              <li><strong>No obstructions.</strong> Keep the lifter&rsquo;s body and the barbell/dumbbell fully visible. Do not let spotters, racks, or other equipment block the view.</li>
+              <li><strong>Frame rate.</strong> 30 fps or higher is recommended for accurate velocity and tempo calculations.</li>
+            </ul>
+          </section>
+
+          <!-- 3. Calibration -->
+          <section class="mt-10">
+            <h2 class="font-display text-2xl font-600 tracking-tight">Calibration (for absolute measurements)</h2>
+            <p class="mt-3 text-[15px] leading-relaxed text-muted">
+              A calibration video establishes a real-world reference scale so BiggerBrother can report absolute velocity (m/s) and absolute range of motion (m). Without calibration, metrics are reported in relative/arbitrary units.
+            </p>
+            <h3 class="mt-6 font-display text-lg font-600">How to record a calibration clip</h3>
+            <ol class="mt-3 list-inside space-y-2 text-[15px] leading-relaxed text-muted">
+              <li>Place a known reference length (e.g., a 45 cm foam roller or a 20 kg barbell that is exactly 1.2 m between collars) in the same plane as the lifter.</li>
+              <li>Record a 5-second static clip with the reference object visible alongside the lifter&rsquo;s full body.</li>
+              <li>Upload this clip using the <strong>Upload Calibration Set</strong> option in the app.</li>
+            </ol>
+            <p class="mt-3 text-[15px] leading-relaxed text-muted">
+              The calibration also creates a personalised velocity-load curve for RIR estimation. The curve fits a 2nd-degree polynomial to the velocity and rep-number data from your calibration set.
+            </p>
+          </section>
+
+          <!-- 4. Supported exercises -->
+          <section class="mt-10">
+            <h2 class="font-display text-2xl font-600 tracking-tight">Supported exercises</h2>
+            <p class="mt-3 text-[15px] leading-relaxed text-muted">
+              BiggerBrother currently supports the following compound and isolation exercises. The framework is extensible — additional exercises can be added by defining new joint-angle heuristics.
+            </p>
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+              <div class="rounded-xl border border-line bg-paper p-4">
+                <h3 class="font-display text-base font-600">Compound lifts</h3>
+                <ul class="mt-2 space-y-1 text-sm text-muted">
+                  <li>Barbell back squat</li>
+                  <li>Barbell front squat</li>
+                  <li>Barbell overhead press</li>
+                  <li>Barbell bench press</li>
+                  <li>Barbell deadlift</li>
+                  <li>Barbell row</li>
+                </ul>
+              </div>
+              <div class="rounded-xl border border-line bg-paper p-4">
+                <h3 class="font-display text-base font-600">Isolation lifts</h3>
+                <ul class="mt-2 space-y-1 text-sm text-muted">
+                  <li>Bicep curl</li>
+                  <li>Tricep extension</li>
+                  <li>Tricep pushdown</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- 5. Metrics glossary -->
+          <section class="mt-10">
+            <h2 class="font-display text-2xl font-600 tracking-tight">Metrics glossary</h2>
+            <p class="mt-3 text-[15px] leading-relaxed text-muted">
+              Every metric on the BiggerBrother dashboard is defined below. Values shown are per-set averages unless stated otherwise.
+            </p>
+
+            <dl class="mt-6 divide-y divide-line">
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Total reps</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">The total number of repetitions detected from the joint-angle time series. Peaks and troughs in the primary movement angle (e.g., knee angle for squats, elbow angle for curls) define rep boundaries.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Avg tempo</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Average duration of a single rep, in seconds. Broken into concentric (lifting) and eccentric (lowering) phases. Example: &ldquo;3.1s — 0.2s eccentric&rdquo; means the lowering phase is 0.2 seconds slower than average, indicating controlled descent.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Peak velocity</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">The maximum concentric bar velocity observed across all reps, in m/s. Higher peak velocity at a given weight typically indicates lower fatigue. Typical ranges: squat 0.4&ndash;0.8 m/s at 70% 1RM, bench press 0.3&ndash;0.7 m/s.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Avg depth / range of motion</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Measured in degrees for joint angles (e.g., knee angle at the bottom of a squat) or metres for absolute bar displacement. &ldquo;Below parallel&rdquo; means the hip crease dropped below the top of the knee.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Bar path deviation</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Lateral displacement of the barbell from a straight vertical line, in cm. A deviation below 5 cm is considered good for most compound lifts. Higher deviation indicates bar wobble, often caused by muscle imbalance or fatigue.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Concentric power</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Estimated power output during the concentric phase, in watts. Derived from weight &times; concentric velocity. Useful for tracking explosive strength development.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Tempo consistency</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Expressed as a percentage. 100% means every rep was exactly the same duration. Above 90% is excellent; below 70% suggests pacing problems or form breakdown.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Left/right balance</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Ratio of movement contribution between left and right sides, expressed as a percentage split. 50/50 is perfectly symmetrical. A split of 60/40 or worse may indicate an underlying muscle imbalance.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Form score</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">A composite score (0&ndash;100) that aggregates depth consistency, bar path deviation, and movement symmetry. The score is calculated as the weighted sum of these three sub-scores. A score above 80 is considered good form; above 90 is excellent.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Reps in reserve (RIR)</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">An estimate of how many additional reps the lifter could have completed before reaching failure. Only available after a calibration set has been uploaded. Uses the fitted velocity-load curve to compare current rep velocities against the failure profile.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Estimated 1RM</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Estimated one-rep maximum based on the relationship between rep velocity and load. More accurate when multiple loads and rep speeds are available from previous sessions.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Mean concentric speed</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Average bar velocity during the concentric phase only (not averaged across the entire rep). Measured in m/s. This is the primary input to the RIR estimation model.</dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- 6. FAQ -->
+          <section class="mt-10">
+            <h2 class="font-display text-2xl font-600 tracking-tight">Frequently asked questions</h2>
+
+            <div class="mt-6 space-y-6">
+              <div>
+                <h3 class="font-display text-base font-600">How is my video data handled?</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">Videos are uploaded to the server, processed in memory, and deleted immediately after analysis. No video data is stored, cached, or logged. Pose landmark coordinates are ephemeral and not persisted beyond the HTTP request lifecycle.</p>
+              </div>
+              <div>
+                <h3 class="font-display text-base font-600">What file formats and sizes are supported?</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">MP4 and MOV files up to 500 MB. For longer sets, lower the resolution or trim the clip before uploading. A typical 30-second 1080p clip is well under the limit.</p>
+              </div>
+              <div>
+                <h3 class="font-display text-base font-600">Can I use BiggerBrother on my phone?</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">Yes. The web app is fully responsive and works in mobile browsers. Record with your phone&rsquo;s camera, then upload directly from your camera roll. Ensure the phone is on a tripod or propped against a stable surface.</p>
+              </div>
+              <div>
+                <h3 class="font-display text-base font-600">Why is my form score lower than expected?</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">The form score penalises bar path wobble, asymmetrical movement, and inconsistent depth. Common reasons: uneven foot placement, fatigue-induced drift in later reps, or an off-centre camera angle that makes the bar appear to deviate. Check your camera alignment before re-recording.</p>
+              </div>
+              <div>
+                <h3 class="font-display text-base font-600">How accurate is the RIR estimate?</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">RIR accuracy depends on calibration quality. A calibration set taken close to actual failure produces a more reliable velocity-load curve. RIR estimates are most accurate within 0&ndash;3 reps of failure. The model is a 2nd-degree polynomial fit and may underperform on exercises with high technical complexity (e.g., deadlifts).</p>
+              </div>
+              <div>
+                <h3 class="font-display text-base font-600">What is considered a &ldquo;good&rdquo; peak velocity for my weight?</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">As a rough guide: at 70% of your 1RM, expect squat concentric peak velocity between 0.50&ndash;0.80 m/s, bench press between 0.35&ndash;0.65 m/s, and overhead press between 0.30&ndash;0.55 m/s. Values vary significantly by individual technique and training status.</p>
+              </div>
+              <div>
+                <h3 class="font-display text-base font-600">Can I use it for dumbbell exercises?</h3>
+                <p class="mt-1 text-sm leading-relaxed text-muted">Currently the tool is optimised for barbell exercises. Dumbbell tracking is on the roadmap but not yet supported. Bicep curls with dumbbells partially work since the tracking is joint-angle based, but absolute bar path metrics are not meaningful without a single rigid bar.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 7. Troubleshooting -->
+          <section class="mt-10">
+            <h2 class="font-display text-2xl font-600 tracking-tight">Troubleshooting</h2>
+            <dl class="mt-4 divide-y divide-line">
+              <div class="py-4">
+                <dt class="font-display text-base font-600">&ldquo;No landmarks detected&rdquo; error</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">The pose model could not find a person in the video. Ensure the full body is visible, lighting is adequate, and the video is at least 480p resolution.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Rep count seems incorrect</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Rep detection uses prominence-based peak finding. Very slow, partial, or pause-rep squats may not register clean peaks. Ensure each rep includes a clear descent and ascent without prolonged pauses at the bottom.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Velocity values look wrong</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">Without calibration, velocity is reported in arbitrary units. Upload a calibration clip with a known reference length for absolute m/s values. Also verify you selected the correct exercise — velocity heuristics are exercise-specific.</dd>
+              </div>
+              <div class="py-4">
+                <dt class="font-display text-base font-600">Upload fails or times out</dt>
+                <dd class="mt-1 text-sm leading-relaxed text-muted">File size limit is 500 MB. Check your network speed. If the issue persists, reduce video resolution or trim the clip to under 60 seconds.</dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- Footer nav inside docs -->
+          <div class="mt-16 border-t border-line pt-8">
+            <p class="text-sm text-muted">
+              <a href="#upload" class="underline transition-colors hover:text-ink">Back to home</a>
+              &middot;
+              <a href="#how-it-works" class="underline transition-colors hover:text-ink">How it works</a>
+              &middot;
+              <a href="https://github.com/Gabayoyo/BiggerBrotherWebApp" target="_blank" rel="noopener" class="underline transition-colors hover:text-ink">GitHub</a>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -56,4 +56,4 @@ def compute_vl_curve(
         plt.tight_layout()
         plt.show()
 
-    return np.poly1d(coeffs)
+    return np.poly1d(coeffs)  # type: ignore[no-any-return]

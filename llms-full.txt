@@ -1,0 +1,48 @@
+# BiggerBrother — Full Technical Context
+
+## What it does
+BiggerBrother is a computer vision application that extracts pose data from exercise videos and uses it to derive repetition metrics (reps, speed, durations) and estimate reps in reserve (RIR) via personalised calibration data. The tool works both as a command-line interface (CLI) and through a web application at https://biggerbrother.app/.
+
+## Architecture
+- **Frontend:** Single-page application built with Alpine.js v3.14 and Tailwind CSS (CDN). States: upload → processing → dashboard.
+- **Backend:** FastAPI Python server with three endpoints: `/analyse`, `/calibrate`, `/estimate-rir`.
+- **Pose engine:** MediaPipe Pose Landmarker — detects 33 body landmarks per frame from uploaded video.
+- **Rep detection:** Uses `scipy.signal.find_peaks` on joint angle time series to identify repetitions.
+- **RIR estimation:** Polynomial regression (velocity-load curve) fitted on calibration data. Predicts how many reps remain before failure.
+
+## Endpoints
+| Endpoint | Method | Description |
+|---|---|---|
+| `/analyse` | POST | Upload video → per-rep metrics + estimated 1RM |
+| `/calibrate` | POST | Upload calibration video → VL curve coefficients |
+| `/estimate-rir` | POST | Send stored metrics + coefficients → RIR estimate |
+
+## Metric definitions
+- **Concentric peak velocity (m/s):** Maximum bar/barbell speed during the lifting (concentric) phase
+- **Eccentric control ratio:** Ratio of eccentric to concentric duration — higher means more controlled lowering
+- **Bar path deviation (cm):** Lateral displacement of the bar from a straight vertical line
+- **Range of motion (m/degrees):** Total distance or joint angle traversed during the rep
+- **Left/right balance (%):** Symmetry of force contribution between left and right sides
+- **Tempo consistency (%):** Standard deviation of rep durations across the set — higher means more uniform pacing
+- **Form score (0–100):** Composite of depth consistency, bar path deviation, and movement symmetry
+
+## Supported exercises
+Back squat, front squat, overhead press, bench press, deadlift, barbell row, bicep curl, tricep extension. Framework is extensible for additional exercises.
+
+## Camera setup recommendations
+- Record from a static side-on angle
+- Ensure full body is in frame throughout the set
+- Good lighting; no obstructions
+- For calibration, include a known reference length in the frame
+
+## Technical dependencies
+OpenCV, NumPy, MediaPipe, SciPy, Pandas, FastAPI, Pydantic, Alpine.js, Tailwind CSS
+
+## Installation (self-hosted CLI version)
+```
+python3 -m pip install -r requirements.txt
+python3 src/bigger_brother.py path/to/video.mp4 "bicep_curl" 10
+```
+
+## Open source
+Source code available at https://github.com/Gabayoyo/BiggerBrotherWebApp under a permissive license.

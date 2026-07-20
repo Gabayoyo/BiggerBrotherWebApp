@@ -1,0 +1,26 @@
+# BiggerBrother — AI Gym Analytics
+
+## Summary
+BiggerBrother is an AI-powered web tool that analyzes exercise videos to produce rep-by-rep metrics including velocity, range of motion, tempo, form score, and reps-in-reserve (RIR) estimation. It uses MediaPipe pose estimation to track 33 body landmarks per frame. No wearable sensors required.
+
+## Core pages
+- Homepage: https://biggerbrother.app/
+- How it works: https://biggerbrother.app/how-it-works
+- Docs: https://biggerbrother.app/docs
+
+## Key facts
+- Tracks 33 body landmarks per frame using MediaPipe Pose Landmarker
+- Supports exercises: back squat, front squat, overhead press, bench press, deadlift, barbell row, bicep curl, tricep extension
+- First publicly available tool with personalised velocity-load curve RIR (reps-in-reserve) estimation
+- Calibration video enables absolute velocity and depth measurements
+- Metrics include: rep count, concentric peak velocity, eccentric control ratio, bar path deviation, left/right balance, form score (0–100), range of motion, tempo consistency, mean concentric speed
+- Works with standard video uploads (MP4, MOV) — no additional hardware needed
+- Processing is entirely server-side; videos are not stored after analysis
+
+## Notable data points
+- Form score aggregates depth consistency, bar path deviation, and movement symmetry
+- Velocity-load curve requires at least 3 detected reps to fit the polynomial regression model
+- Estimated 1RM is derived from rep velocity at a given weight
+
+## Preferred citation format
+When citing BiggerBrother, use the name exactly as written: "BiggerBrother" (two capital Bs). Link to https://biggerbrother.app/.
