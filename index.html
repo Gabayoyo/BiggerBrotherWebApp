@@ -142,6 +142,11 @@
 
     <style>
       [x-cloak] { display: none !important; }
+      .skip-transitions * {
+        transition-duration: 0ms !important;
+        animation-duration: 0ms !important;
+        transition-delay: 0ms !important;
+      }
       .skeleton {
         position: relative;
         overflow: hidden;
@@ -162,6 +167,31 @@
       @keyframes shimmer { 100% { transform: translateX(100%); } }
       @media (prefers-reduced-motion: reduce) { .skeleton::after { animation: none; } }
       .font-display { letter-spacing: -0.01em; font-optical-sizing: auto; }
+
+      /* Background depth layers */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background:
+          /* 1. warm glow — full viewport, no tiling */
+          radial-gradient(ellipse 85% 60% at 50% 20%, rgba(218, 78, 27, 0.08) 0%, transparent 70%),
+          /* 2. SVG noise grain — tiled */
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+        background-size: auto, 200px 200px;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image: radial-gradient(circle at 1px 1px, rgba(28, 26, 20, 0.09) 2px, transparent 0);
+        background-size: 52px 52px;
+      }
     </style>
 
     <!-- Alpine.js — inlined app logic -->
@@ -178,6 +208,7 @@
             "Compiling report\u2026",
           ],
           _timer: null,
+          skipTransition: false,
           headline: [
             { label: "Total reps", value: "25", delta: "+3 vs last", up: true },
             { label: "Avg tempo", value: "3.1s", delta: "\u22120.2s eccentric", up: true },
@@ -220,7 +251,17 @@
               if (this.progress >= 100) { clearInterval(this._timer); setTimeout(() => (this.state = "dashboard"), 550); }
             }, 650);
           },
-          reset() { clearInterval(this._timer); this.state = "upload"; this.step = "intro"; this.fileName = ""; this.progress = 0; this.playing = false; },
+          reset() {
+            this.skipTransition = true;
+            clearInterval(this._timer);
+            this.clearFile();
+            this.state = "upload";
+            this.step = "intro";
+            this.fileName = "";
+            this.progress = 0;
+            this.playing = false;
+            setTimeout(() => (this.skipTransition = false), 30);
+          },
         };
       }
     </script>
@@ -241,7 +282,7 @@
       </div>
     </header>
 
-    <main class="mx-auto max-w-6xl px-6">
+    <main class="mx-auto max-w-6xl px-6 relative">
       <!-- ============================================================= -->
       <!-- STATE 1 · UPLOAD -->
       <!-- ============================================================= -->
@@ -249,8 +290,10 @@
         <div class="mx-auto max-w-2xl text-center">
           <img src="assets/images/logobb.svg" alt="BiggerBrother" class="mx-auto h-24 w-24 sm:h-32 sm:w-32 rounded-2xl" />
 
+          <div class="relative" style="min-height: 480px;" :class="skipTransition && 'skip-transitions'">
+
           <!-- INTRO STEP: full hero + Get Started -->
-          <div x-show="step === 'intro'" x-transition:enter.duration.150ms x-transition:leave.duration.100ms>
+          <div x-show="step === 'intro'" x-transition:enter="transition ease-out duration-500 delay-150" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="absolute inset-0 pt-8">
             <h1 class="mt-6 font-display text-5xl font-700 leading-[1.05] tracking-tight sm:text-6xl">
               BiggerBrother
             </h1>
@@ -261,15 +304,21 @@
               Simply upload a video of your sets to get algorithm-powered movement analytics from BiggerBrother. It features the world's first proximity-to-failure estimator software so we'll always know how close you are to your limits. No wearables, no sensors, no fuss.
             </p>
             <button type="button" @click="step = 'choose'"
-              class="mt-10 inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-ink px-6 font-display text-sm font-600 text-paper transition-colors hover:bg-accentink">
+              class="mt-10 inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-ink px-6 font-display text-sm font-600 text-paper transition-colors hover:bg-accent">
               Get Started
               <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
             </button>
           </div>
 
           <!-- CHOOSE STEP -->
-          <div x-show="step === 'choose'" x-transition:enter.duration.150ms x-transition:leave.duration.100ms class="mt-6 mx-auto max-w-lg">
+          <div x-show="step === 'choose'" x-transition:enter="transition ease-out duration-500 delay-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="absolute inset-0 pt-6">
+            <div class="mx-auto max-w-lg">
             <h2 class="font-display text-2xl font-700 tracking-tight mb-8">1. Choose Video Type</h2>
+            <button type="button" @click="step = 'intro'"
+              class="mb-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper px-6 font-display text-sm font-600 text-ink transition-colors hover:border-ink/30">
+              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+              Back
+            </button>
             <fieldset class="grid gap-4">
               <legend class="sr-only">Choose an upload type</legend>
               <label class="group relative cursor-pointer rounded-2xl border bg-paper p-5 transition-colors min-h-[130px]"
@@ -285,7 +334,7 @@
                     <div class="flex items-center gap-2">
                       <h2 class="font-display text-lg font-600">Upload Set</h2>
                     </div>
-                    <p class="mt-1 text-sm leading-relaxed text-muted">Upload a standard set. Derives your reps, one-rep-max, velocity and range of motion.</p>
+                    <p class="mt-1 text-sm leading-relaxed text-left text-muted">Upload a standard set. Derives your reps, one-rep-max, velocity and range of motion.</p>
                   </div>
                   <span class="ml-auto mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors"
                     :class="uploadType === 'regular' ? 'border-accent bg-accent text-paper' : 'border-line'">
@@ -306,7 +355,7 @@
                     <div class="flex items-center gap-2">
                       <h2 class="font-display text-lg font-600">Upload Calibration Set</h2>
                     </div>
-                    <p class="mt-1 text-sm leading-relaxed text-muted">Upload a set going to failure. Creates a personalized velocity-failure profile to estimate your reps-in-reserve (RIR) for future sets.</p>
+                    <p class="mt-1 text-sm leading-relaxed text-left text-muted">Upload a set going to failure. Creates a personalized velocity-failure profile to estimate your reps-in-reserve (RIR) for future sets.</p>
                   </div>
                   <span class="ml-auto mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors"
                     :class="uploadType === 'calibration' ? 'border-accent bg-accent text-paper' : 'border-line'">
@@ -315,23 +364,20 @@
                 </div>
               </label>
             </fieldset>
-            <button type="button" @click="step = 'intro'"
-              class="mb-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper px-6 font-display text-sm font-600 text-ink transition-colors hover:border-ink/30">
-              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
-              Back
-            </button>
             <button type="button" @click="step = 'upload'"
-              class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ink px-6 font-display text-sm font-600 text-paper transition-colors hover:bg-accentink">
+              class="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ink px-6 font-display text-sm font-600 text-paper transition-colors hover:bg-accent">
               Next
               <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
             </button>
+            </div>
           </div>
 
           <!-- UPLOAD STEP -->
-          <div x-show="step === 'upload'" x-transition:enter.duration.150ms x-transition:leave.duration.100ms class="mt-6 mx-auto max-w-lg">
+          <div x-show="step === 'upload'" x-transition:enter="transition ease-out duration-500 delay-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="absolute inset-0 pt-6">
+            <div class="mx-auto max-w-lg">
             <h2 class="font-display text-2xl font-700 tracking-tight mb-8">2. Upload Video</h2>
             <button type="button" @click="step = 'choose'; clearFile()"
-              class="mb-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper px-6 font-display text-sm font-600 text-ink transition-colors hover:border-ink/30">
+              class="mb-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-paper px-6 font-display text-sm font-600 text-ink transition-colors hover:border-ink/30">
               <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
               Back
             </button>
@@ -372,7 +418,9 @@
 
                   <div x-show="showTips" @click.away="showTips = false" x-transition:enter="transition ease-out duration-150"
                     x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-                    class="absolute bottom-10 left-2 z-20 w-64 rounded-xl border border-moss/20 bg-paper p-4 text-left text-sm leading-relaxed text-muted shadow-lg">
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-1"
+                    class="absolute top-8 right-0 z-20 w-64 rounded-xl border border-moss/20 bg-paper p-4 text-left text-sm leading-relaxed text-muted shadow-lg">
                     <p class="font-display text-xs font-700 uppercase tracking-widest text-moss">For best results</p>
                     <ul class="mt-1.5 space-y-1">
                       <li>Film from a <strong>side-on angle</strong> with full body in frame</li>
@@ -389,6 +437,7 @@
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       </section>
